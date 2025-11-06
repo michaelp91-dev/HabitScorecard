@@ -221,20 +221,53 @@
         let currentModalAction = null;
         let currentIntentionType = 'time'; 
 
-        // NEW: Predefined habits from the document
+        // NEW: Expanded list of predefined habits
         const predefinedHabits = [
+            // Morning
             "Wake up",
             "Turn off alarm",
             "Check phone",
+            "Drink water",
+            "Make bed",
             "Go to bathroom",
             "Weigh myself",
             "Take a shower",
             "Brush teeth",
             "Floss teeth",
-            "Put on deodorant",
-            "Hang up towel to dry",
+            "Skincare routine",
             "Get dressed",
-            "Make tea / coffee"
+            "Make coffee / tea",
+            "Eat breakfast",
+            "Meditate",
+            "Stretch",
+            "Feed pet",
+            // Day / Work
+            "Commute to work / school",
+            "Check email",
+            "Attend meeting",
+            "Eat lunch",
+            "Go for a walk",
+            "Exercise / Workout",
+            "Take a break",
+            "Eat a fruit / vegetable",
+            // Evening
+            "Cook dinner",
+            "Eat dinner",
+            "Wash dishes",
+            "Tidy up living space",
+            "Do laundry",
+            "Watch TV",
+            "Scroll social media",
+            "Read a book",
+            "Journal",
+            "Practice guitar",
+            "Call a friend / family member",
+            "Plan tomorrow's to-do list",
+            "Set alarm for tomorrow",
+            "Go to bed",
+            // Neutral / Negative (for scoring)
+            "Eat sugar / snacks",
+            "Buy something unnecessary"
         ];
 
         // --- DOM Elements ---
@@ -245,7 +278,6 @@
 
         // Scorecard Elements
         const habitForm = document.getElementById('add-habit-form');
-        // UPDATED: Changed from input to select
         const habitSelect = document.getElementById('habit-select');
         const habitTimeInput = document.getElementById('habit-time-input');
         const habitListContainer = document.getElementById('habit-list-container');
@@ -372,7 +404,6 @@
 
         function addHabit(e) {
             e.preventDefault();
-            // UPDATED: Get value from select
             const habitText = habitSelect.value;
             const habitTime = habitTimeInput.value;
             if (habitText && habitTime) {
@@ -389,7 +420,6 @@
                 habits.push(newHabit);
                 saveHabits();
                 renderHabits();
-                // Reset select to default
                 habitSelect.value = "";
                 habitTimeInput.value = getFormattedTime(new Date());
             }
@@ -554,7 +584,7 @@
             showIntentionForm('time');
             habitTimeInput.value = getFormattedTime(new Date());
 
-            // NEW: Populate the Select Dropdown
+            // Populate Select Dropdown
             predefinedHabits.forEach(habit => {
                 const option = document.createElement('option');
                 option.value = habit;
