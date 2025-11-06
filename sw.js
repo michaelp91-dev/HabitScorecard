@@ -1,8 +1,9 @@
-const CACHE_NAME = 'habit-scorecard-v1';
+const CACHE_NAME = 'habit-toolkit-v2'; // Updated cache name
 // This list includes the core files for the app to work offline.
 const urlsToCache = [
   '/',
   '/index.html',
+  '/manifest.json', // Added manifest to cache
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
@@ -42,6 +43,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
