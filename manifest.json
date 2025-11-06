@@ -4,17 +4,17 @@
   "description": "A toolkit to track habits and set intentions.",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#10B981",
+  "background_color": "#fdfaef",
+  "theme_color": "#1f2937",
   "icons": [
     {
-      "src": "https://placehold.co/192x192/10B981/FFFFFF?text=Habit&font=inter",
+      "src": "https://placehold.co/192x192/fdfaef/4a2c2a?text=Habit&font=eb+garamond",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https.placehold.co/512x512/10B981/FFFFFF?text=Habit&font=inter",
+      "src": "https://placehold.co/512x512/fdfaef/4a2c2a?text=Habit&font=eb+garamond",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
