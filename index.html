@@ -7,42 +7,37 @@
     
     <!-- PWA Links -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3730a3"/> <!-- Updated to new primary color -->
+    <!-- NEW: Updated theme-color to dark gray -->
+    <meta name="theme-color" content="#1f2937"/>
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NEW: Load EB Garamond font -->
+    <!-- Load EB Garamond font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         body {
-            /* NEW: Updated font */
             font-family: 'EB Garamond', serif;
-            /* Prevents pull-to-refresh on mobile */
             overscroll-behavior-y: contain;
         }
         /* Custom styles for habit labels */
         .label-positive {
-            /* NEW: Updated colors */
             background-color: #166534; /* Green 800 */
             color: white;
             border-color: #14532d; /* Green 900 */
         }
         .label-negative {
-            /* NEW: Updated colors */
             background-color: #991b1b; /* Red 800 */
             color: white;
             border-color: #7f1d1d; /* Red 900 */
         }
         .label-neutral {
-            /* NEW: Updated colors */
             background-color: #44403c; /* Stone 700 */
             color: white;
             border-color: #292524; /* Stone 800 */
         }
         .label-none {
-            /* NEW: Updated colors */
             background-color: #fef3c7; /* Amber 100 */
             color: #4a2c2a;
             border-color: #fde68a; /* Amber 200 */
@@ -57,7 +52,6 @@
         }
         
         .modal-content {
-            /* NEW: Updated colors */
             background-color: #fdfaef;
             border: 1px solid #dcd0b0;
             padding: 1.5rem;
@@ -69,9 +63,9 @@
 
         /* Styles for active/inactive main tabs */
         .tab-active {
-            /* NEW: Updated colors */
-            border-bottom-color: #3730a3; /* Indigo 800 */
-            color: #3730a3;
+            /* NEW: Updated to dark gray */
+            border-bottom-color: #1f2937; /* Gray 800 */
+            color: #1f2937;
             font-weight: 600;
         }
         .tab-inactive {
@@ -81,23 +75,20 @@
 
         /* Styles for intention sub-tabs */
         .sub-tab-active {
-            /* NEW: Updated colors */
-            background-color: #3730a3; /* Indigo 800 */
+            /* NEW: Updated to dark gray */
+            background-color: #1f2937; /* Gray 800 */
             color: white;
         }
         .sub-tab-inactive {
-            /* NEW: Updated colors */
             background-color: #fef3c7; /* Amber 100 */
             color: #4a2c2a;
             hover:bg-amber-200;
         }
     </style>
 </head>
-<!-- NEW: Updated body colors -->
 <body class="bg-[#fdfaef] text-[#4a2c2a] h-full flex flex-col">
 
     <!-- Header -->
-    <!-- NEW: Updated header colors -->
     <header class="bg-[#f8f3e0] shadow-sm sticky top-0 z-10 border-b border-[#dcd0b0]">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <h1 class="text-2xl font-bold text-[#3a201f]">Habit Building Toolkit</h1>
@@ -125,17 +116,16 @@
             <div id="view-scorecard">
                 <!-- Add Habit Form -->
                 <form id="add-habit-form" class="flex items-center space-x-2 mb-6">
-                    <!-- NEW: Updated input styling -->
-                    <input type="text" id="habit-input" placeholder="e.g., 'Woke up and checked phone'" class="flex-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
-                    <input type="time" id="habit-time-input" class="block w-28 rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
-                    <!-- NEW: Updated button styling -->
-                    <button type="submit" class="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-800 hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700">
+                    <!-- NEW: Updated focus colors -->
+                    <input type="text" id="habit-input" placeholder="e.g., 'Woke up and checked phone'" class="flex-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
+                    <input type="time" id="habit-time-input" class="block w-28 rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
+                    <!-- NEW: Updated button colors -->
+                    <button type="submit" class="inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700">
                         Add
                     </button>
                 </form>
 
                 <!-- Habit List -->
-                <!-- NEW: Updated card styling -->
                 <div class="bg-[#faf6e9] shadow-md rounded-md border border-[#dcd0b0]">
                     <div id="habit-list-container" class="divide-y divide-[#dcd0b0]">
                         <!-- Habits will be injected here -->
@@ -155,10 +145,11 @@
                 
                 <!-- NEW: Intention Type Tabs -->
                 <div class="flex rounded-md shadow-sm mb-4">
-                    <button id="sub-tab-time" type="button" class="sub-tab-active relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-l-md border border-indigo-800 text-lg font-medium focus:z-10 focus:outline-none focus:ring-1 focus:ring-indigo-700 focus:border-indigo-700 transition-colors">
+                    <!-- NEW: Updated border/focus colors -->
+                    <button id="sub-tab-time" type="button" class="sub-tab-active relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-l-md border border-gray-800 text-lg font-medium focus:z-10 focus:outline-none focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-colors">
                         Time-Based
                     </button>
-                    <button id="sub-tab-stack" type="button" class="sub-tab-inactive -ml-px relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-r-md border border-[#c9b99a] text-lg font-medium focus:z-10 focus:outline-none focus:ring-1 focus:ring-indigo-700 focus:border-indigo-700 transition-colors">
+                    <button id="sub-tab-stack" type="button" class="sub-tab-inactive -ml-px relative inline-flex items-center justify-center w-1/2 px-4 py-2 rounded-r-md border border-[#c9b99a] text-lg font-medium focus:z-10 focus:outline-none focus:ring-1 focus:ring-gray-700 focus:border-gray-700 transition-colors">
                         Habit-Stack
                     </button>
                 </div>
@@ -169,18 +160,19 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="intention-behavior" class="block text-sm font-medium text-[#4a2c2a]">Behavior</label>
-                            <input type="text" id="intention-behavior" placeholder="e.g., 'read for 20 minutes'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
+                            <input type="text" id="intention-behavior" placeholder="e.g., 'read for 20 minutes'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
                         </div>
                         <div>
                             <label for="intention-time" class="block text-sm font-medium text-[#4a2c2a]">Time</label>
-                            <input type="time" id="intention-time" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
+                            <input type="time" id="intention-time" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
                         </div>
                     </div>
                     <div>
                         <label for="intention-location" class="block text-sm font-medium text-[#4a2c2a]">Location</label>
-                        <input type="text" id="intention-location" placeholder="e.g., 'my office'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
+                        <input type="text" id="intention-location" placeholder="e.g., 'my office'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
                     </div>
-                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-800 hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700">
+                    <!-- NEW: Updated button colors -->
+                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700">
                         Add Intention
                     </button>
                 </form>
@@ -190,13 +182,14 @@
                     <p class="text-lg text-[#5c4033] italic -mt-2">"After I [CURRENT HABIT/CUE], I will [NEW HABIT]."</p>
                     <div>
                         <label for="intention-cue" class="block text-sm font-medium text-[#4a2c2a]">Current Habit (The Cue)</label>
-                        <input type="text" id="intention-cue" placeholder="e.g., 'get to work'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
+                        <input type="text" id="intention-cue" placeholder="e.g., 'get to work'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
                     </div>
                     <div>
                         <label for="intention-new-habit" class="block text-sm font-medium text-[#4a2c2a]">New Habit (The Action)</label>
-                        <input type="text" id="intention-new-habit" placeholder="e.g., 'fill up my water bottle'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-indigo-600 focus:ring-indigo-600 sm:text-lg p-3" required>
+                        <input type="text" id="intention-new-habit" placeholder="e.g., 'fill up my water bottle'" class="mt-1 block w-full rounded-md border-[#c9b99a] bg-[#fffcf5] text-[#4a2c2a] shadow-sm focus:border-gray-600 focus:ring-gray-600 sm:text-lg p-3" required>
                     </div>
-                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-800 hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700">
+                    <!-- NEW: Updated button colors -->
+                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700">
                         Add Habit Stack
                     </button>
                 </form>
@@ -230,7 +223,8 @@
                 <button id="confirm-delete-button" type="button" class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-800 text-base font-medium text-white hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-700 sm:text-sm">
                     Yes, Delete
                 </button>
-                <button id="cancel-delete-button" type="button" class="mt-3 sm:mt-0 inline-flex justify-center w-full rounded-md border border-[#c9b99a] shadow-sm px-4 py-2 bg-white text-base font-medium text-[#4a2c2a] hover:bg-[#faf6e9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 sm:text-sm">
+                <!-- NEW: Updated focus color -->
+                <button id="cancel-delete-button" type="button" class="mt-3 sm:mt-0 inline-flex justify-center w-full rounded-md border border-[#c9b99a] shadow-sm px-4 py-2 bg-white text-base font-medium text-[#4a2c2a] hover:bg-[#faf6e9] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 sm:text-sm">
                     Cancel
                 </button>
             </div>
@@ -357,7 +351,6 @@
                         <p class="text-sm text-[#5c4033]">${displayDateTime}</p> 
                     </div>
                     <div class="flex-shrink-0 flex items-center space-x-2">
-                        <!-- NEW: Updated default button styles -->
                         <button data-id="${habit.id}" data-label="positive" class="label-button w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold ${habit.label === 'positive' ? 'label-positive' : 'label-none'}">
                             +
                         </button>
@@ -451,20 +444,20 @@
                 intentionEl.className = 'p-4 flex items-center justify-between space-x-4';
                 
                 let innerHTML = '';
-                // NEW: Render based on intention type
+                // NEW: Render based on intention type and updated colors
                 if (intention.type === 'time') {
                     innerHTML = `
                         <p class="text-lg text-[#4a2c2a]">
-                            I will <strong class="font-medium text-indigo-800">${intention.behavior}</strong>
-                            at <strong class="font-medium text-indigo-800">${intention.time}</strong>
-                            in <strong class="font-medium text-indigo-800">${intention.location}</strong>.
+                            I will <strong class="font-medium text-gray-800">${intention.behavior}</strong>
+                            at <strong class="font-medium text-gray-800">${intention.time}</strong>
+                            in <strong class="font-medium text-gray-800">${intention.location}</strong>.
                         </p>
                     `;
                 } else { // 'stack'
                     innerHTML = `
                         <p class="text-lg text-[#4a2c2a]">
-                            After I <strong class="font-medium text-blue-800">${intention.cue}</strong>,
-                            I will <strong class="font-medium text-blue-800">${intention.newHabit}</strong>.
+                            After I <strong class="font-medium text-gray-800">${intention.cue}</strong>,
+                            I will <strong class="font-medium text-gray-800">${intention.newHabit}</strong>.
                         </p>
                     `;
                 }
@@ -493,7 +486,6 @@
             intentions = JSON.parse(localStorage.getItem(INTENTION_STORAGE_KEY)) || [];
         }
 
-        // NEW: Updated to handle both form types
         function addIntention(e) {
             e.preventDefault();
             let newIntention = null;
@@ -512,7 +504,6 @@
                         location,
                         createdAt: Date.now()
                     };
-                    // Reset form
                     intentionBehaviorInput.value = '';
                     intentionTimeInput.value = '';
                     intentionLocationInput.value = '';
@@ -529,7 +520,6 @@
                         newHabit,
                         createdAt: Date.now()
                     };
-                    // Reset form
                     intentionCueInput.value = '';
                     intentionNewHabitInput.value = '';
                 }
@@ -605,8 +595,8 @@
 
             // Form Listeners
             habitForm.addEventListener('submit', addHabit);
-            intentionFormTime.addEventListener('submit', addIntention); // Listen on the form
-            intentionFormStack.addEventListener('submit', addIntention); // Listen on the other form
+            intentionFormTime.addEventListener('submit', addIntention);
+            intentionFormStack.addEventListener('submit', addIntention);
 
             // Click listener for all habit list actions
             habitListContainer.addEventListener('click', (e) => {
