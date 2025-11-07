@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Scorecard AI</title>
+    <title>Habit Scorecard</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827"/>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,7 +24,6 @@
         .recording { animation: pulse-red 1.5s infinite; color: #ef4444 !important; border-color: #ef4444 !important; }
         .shimmer { animation: shimmer 2s linear infinite forwards; background: #f6f7f8; background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%); background-size: 1200px 100%; }
         @keyframes shimmer { 0% { background-position: -1200px 0; } 100% { background-position: 1200px 0; } }
-        /* AI Status Dot */
         .ai-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .ai-off { background-color: #d1d5db; }
         .ai-loading { background-color: #fbbf24; animation: pulse-yellow 1s infinite; }
@@ -33,34 +32,18 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-full flex flex-col">
-
     <header class="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div><h1 class="text-xl sm:text-2xl font-bold text-gray-900">Habit Scorecard</h1><p class="text-xs sm:text-sm text-gray-500">Atomic Habits Tracker</p></div>
             <div class="flex space-x-2">
-                <button id="ai-toggle-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <span id="ai-status-dot" class="ai-dot ai-off"></span>
-                    <span id="ai-status-text">Enable AI</span>
-                </button>
-                <button id="analyze-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Analyze
-                </button>
+                <button id="ai-toggle-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"><span id="ai-status-dot" class="ai-dot ai-off"></span><span id="ai-status-text">Enable AI</span></button>
+                <button id="analyze-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Analyze</button>
             </div>
         </div>
     </header>
-
     <main class="flex-1 overflow-y-auto py-6 sm:py-8">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <div id="ai-progress-container" class="hidden mb-6 bg-white p-4 rounded-lg border border-indigo-100 shadow-sm">
-                <p class="text-sm font-medium text-indigo-900 mb-2 flex justify-between">
-                    <span id="ai-progress-text">Initializing AI Brain...</span>
-                    <span id="ai-progress-pct">0%</span>
-                </p>
-                <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="ai-progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div></div>
-                <p class="text-xs text-gray-500 mt-2">Downloading model (~1.2GB). Only happens once.</p>
-            </div>
-
+            <div id="ai-progress-container" class="hidden mb-6 bg-white p-4 rounded-lg border border-indigo-100 shadow-sm"><p class="text-sm font-medium text-indigo-900 mb-2 flex justify-between"><span id="ai-progress-text">Waking up Clarke...</span><span id="ai-progress-pct">0%</span></p><div class="w-full bg-gray-200 rounded-full h-2.5"><div id="ai-progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div></div><p class="text-xs text-gray-500 mt-2">Downloading brain (~1.2GB). Only happens once.</p></div>
             <div id="view-scorecard">
                 <form id="add-habit-form" class="flex items-center space-x-2 mb-4 sm:mb-6">
                     <div class="flex-1 flex items-center space-x-2">
@@ -77,104 +60,76 @@
             </div>
         </div>
     </main>
-
     <div id="manage-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[80vh]"><div class="p-4 border-b border-gray-200 flex justify-between items-center"><h3 class="text-lg font-bold">Manage List</h3><button id="close-manage-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div class="p-4 border-b bg-gray-50"><form id="manage-add-form" class="flex space-x-2"><input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" required><button type="submit" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button></form></div><div class="flex-1 overflow-y-auto p-2"><ul id="manage-list" class="divide-y divide-gray-100"></ul></div><div class="p-4 border-t text-center bg-gray-50"><button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset to Defaults</button></div></div></div>
     <div id="analyze-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50"><div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10"><h3 class="text-lg font-bold flex items-center text-indigo-900"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Smart Analysis</h3><button id="close-analyze-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div id="analyze-loading" class="hidden p-8 space-y-4"><p id="analyze-status-text" class="text-center text-sm text-indigo-600 font-medium mb-4">AI is thinking...</p><div class="h-4 rounded shimmer w-3/4"></div><div class="h-4 rounded shimmer"></div><div class="h-4 rounded shimmer w-5/6"></div></div><div id="analyze-content" class="flex-1 overflow-y-auto p-6 space-y-6 hidden"></div></div></div>
     <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Clear All?</h3><p class="mt-2 text-gray-500">This action cannot be undone.</p><div class="mt-6 grid grid-cols-2 gap-3"><button id="confirm-delete-button" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-base font-medium text-white hover:bg-gray-800 sm:text-sm">Yes, Delete</button><button id="cancel-delete-button" class="w-full inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:text-sm">Cancel</button></div></div></div>
     <div id="voice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Unknown Habit</h3><p class="mt-2 text-gray-500">I heard "<span id="voice-habit-name" class="font-medium text-gray-900"></span>". Not in your list yet.</p><div class="mt-6 flex flex-col sm:flex-row-reverse gap-2"><button id="voice-add-log-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-white sm:text-sm">Add to List & Log</button><button id="voice-log-only-btn" class="w-full inline-flex justify-center rounded-md border border-gray-300 bg-white text-gray-700 sm:text-sm">Log Only</button><button id="voice-cancel-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-gray-500 sm:text-sm">Cancel</button></div></div></div>
 
     <script type="module">
-        // Import WebLLM from CDN
         import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
         document.addEventListener('DOMContentLoaded', () => {
-            // --- STATE ---
-            let habits = [], habitList = [];
+            const AI_NAME="Clarke", MODEL_ID="Llama-3.2-1B-Instruct-q4f16_1-MLC";
+            let habits=[],habitList=[],isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null},aiEngine=null,isAiReady=false,clarkeVoice=null;
             const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list';
-            let isTimeManuallyEdited=false, isRecording=false, recognition=null, pendingVoiceHabit={name:null,time:null};
-            // AI State
-            let aiEngine = null;
-            let isAiReady = false;
-            const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC"; // Good balance for browsers
+            const DEFAULT_HABITS=["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
+            const VERB_MAP={'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check'};
+            const CONCEPT_MAP={'social':['call','talk','spoke','chat','text','message','meet','hang','friend','family'],'exercise':['run','jog','walk','hike','lift','gym','workout','fitness'],'clean':['tidy','clean','wash','organize','laundry','dishes'],'consume':['eat','ate','drink','drank','coffee','tea','water']};
 
-            const DEFAULT_HABITS = ["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
-            // Fallback Heuristics
-            const VERB_MAP = {'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check'};
-            const CONCEPT_MAP = {'social': ['call','talk','spoke','chat','text','message','meet','hang','friend','family'],'exercise': ['run','jog','walk','hike','lift','gym','workout','fitness'],'clean': ['tidy','clean','wash','organize','laundry','dishes'],'consume': ['eat','ate','drink','drank','coffee','tea','water']};
-
-            // --- DOM ---
             const $=(id)=>document.getElementById(id);
             const els={habitForm:$('add-habit-form'),habitSelect:$('habit-select'),timeInput:$('habit-time-input'),timeInputMobile:$('habit-time-input-mobile'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),manageBtn:$('manage-habits-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),aiToggle:$('ai-toggle-btn'),aiDot:$('ai-status-dot'),aiText:$('ai-status-text'),aiProgress:$('ai-progress-container'),aiProgressTxt:$('ai-progress-text'),aiProgressPct:$('ai-progress-pct'),aiProgressBar:$('ai-progress-bar'),modals:{confirm:$('confirm-modal'),manage:$('manage-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},manage:{close:$('close-manage-modal'),list:$('manage-list'),form:$('manage-add-form'),input:$('manage-add-input'),reset:$('reset-defaults-button')},voice:{name:$('voice-habit-name'),add:$('voice-add-log-btn'),log:$('voice-log-only-btn'),cancel:$('voice-cancel-btn')},analyze:{close:$('close-analyze-modal'),content:$('analyze-content'),loading:$('analyze-loading'),status:$('analyze-status-text')},confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')}};
 
-            // --- CORE HELPERS ---
             const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             const updateTimeInput=(force=null)=>{const t=force||getFormattedTime(new Date());if(!isTimeManuallyEdited||force){els.timeInput.value=t;els.timeInputMobile.value=t;}};
             const capitalize=(s)=>s.charAt(0).toUpperCase()+s.slice(1);
 
-            // --- AI ENGINE INIT ---
-            async function toggleAI() {
-                if (isAiReady) return; // Already loaded
-                els.aiDot.className = 'ai-dot ai-loading'; els.aiText.textContent = 'Loading AI...';
-                els.aiProgress.classList.remove('hidden');
-                try {
-                    const initProgressCallback = (report) => {
-                        els.aiProgressTxt.textContent = report.text;
-                        els.aiProgressPct.textContent = `${(report.progress * 100).toFixed(0)}%`;
-                        els.aiProgressBar.style.width = `${report.progress * 100}%`;
-                    };
-                    aiEngine = await webllm.CreateMLCEngine(MODEL_ID, { initProgressCallback: initProgressCallback });
-                    isAiReady = true;
-                    els.aiDot.className = 'ai-dot ai-on'; els.aiText.textContent = 'AI Active';
-                    els.aiProgress.classList.add('hidden');
-                } catch (err) {
-                    console.error("AI Init Failed:", err);
-                    alert("AI Initialization Failed. Your browser might not support WebGPU.");
-                    els.aiDot.className = 'ai-dot ai-off'; els.aiText.textContent = 'Enable AI';
-                    els.aiProgress.classList.add('hidden');
-                }
+            // --- TTS ---
+            function initTTS(){
+                const voices=window.speechSynthesis.getVoices();
+                // Prefer female-sounding voices if possible (highly dependent on OS)
+                clarkeVoice=voices.find(v=>v.name.includes('Female')||v.name.includes('Samantha')||v.name.includes('Zira')||v.name.includes('Google US English'))||voices[0];
+            }
+            window.speechSynthesis.onvoiceschanged=initTTS;
+            function speak(text){
+                if(!window.speechSynthesis){console.warn("No TTS");return;}
+                window.speechSynthesis.cancel();
+                const u=new SpeechSynthesisUtterance(text);
+                if(clarkeVoice) u.voice=clarkeVoice;
+                u.rate=1.0; u.pitch=1.0;
+                window.speechSynthesis.speak(u);
             }
 
-            // --- SMART MATCHING (AI + Heuristic Fallback) ---
-            async function findBestMatch(spoken) {
-                // 1. Exact Match (Always fastest)
-                const exact = habitList.find(h => h.toLowerCase() === spoken.toLowerCase());
-                if (exact) return exact;
+            async function toggleAI(){
+                if(isAiReady)return;
+                els.aiDot.className='ai-dot ai-loading';els.aiText.textContent=`Waking ${AI_NAME}...`;els.aiProgress.classList.remove('hidden');
+                try{
+                    aiEngine=await webllm.CreateMLCEngine(MODEL_ID,{initProgressCallback:(r)=>{els.aiProgressTxt.textContent=r.text;els.aiProgressPct.textContent=`${(r.progress*100).toFixed(0)}%`;els.aiProgressBar.style.width=`${r.progress*100}%`;}});
+                    isAiReady=true;els.aiDot.className='ai-dot ai-on';els.aiText.textContent=`${AI_NAME} Ready`;els.aiProgress.classList.add('hidden');
+                    speak(`Hello, I am ${AI_NAME}. I am ready to help you track your habits.`);
+                }catch(e){alert(`${AI_NAME} failed to wake up.`);els.aiDot.className='ai-dot ai-off';els.aiText.textContent='Enable AI';els.aiProgress.classList.add('hidden');}
+            }
 
-                // 2. AI Match (If ready)
+            async function findBestMatch(spoken) {
+                const exact = habitList.find(h => h.toLowerCase() === spoken.toLowerCase()); if(exact) return exact;
                 if (isAiReady && aiEngine) {
                     try {
-                        els.voiceBtn.classList.add('recording'); // Keep red while thinking
-                        const prompt = `Given the user's spoken action: "${spoken}", find the ONE best matching habit from this exact list:\n${JSON.stringify(habitList)}\nIf nothing matches closely, reply "NO_MATCH". Reply ONLY with the exact habit string from the list.`;
-                        const reply = await aiEngine.chat.completions.create({ messages: [{ role: "user", content: prompt }], temperature: 0.1, max_gen_len: 50 });
+                        els.voiceBtn.classList.add('recording');
+                        const reply = await aiEngine.chat.completions.create({ messages: [{ role: "user", content: `Match action: "${spoken}" to ONE habit from list:\n${JSON.stringify(habitList)}\nReply ONLY with the exact list string. If no good match, reply NO_MATCH.` }], temperature: 0.1, max_gen_len: 50 });
                         const match = reply.choices[0].message.content.trim().replace(/['"]/g, '');
                         els.voiceBtn.classList.remove('recording');
                         if (habitList.includes(match)) return match;
-                    } catch (e) { console.warn("AI Match failed, using fallback", e); }
+                    } catch (e) { console.warn("AI Match failed", e); }
                 }
-
-                // 3. Heuristic Fallback
-                let bestMatch = null, maxScore = 0;
-                const normalize = (t) => t.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/).map(w=>VERB_MAP[w]||w).filter(w=>!['a','an','the'].includes(w)).join(' ');
-                const expand = (t) => { let e=normalize(t); for(const[c,ws]of Object.entries(CONCEPT_MAP))if(ws.some(w=>e.includes(w)))e+=' '+c; return e; };
-                const spokenTokens = new Set(expand(spoken).split(' '));
-                habitList.forEach(h => {
-                    const hTokens = new Set(expand(h).split(' '));
-                    let score = 0;
-                    spokenTokens.forEach(t => { if(hTokens.has(t)) score += (CONCEPT_MAP[t]?0.5:1); });
-                    const final = score / (hTokens.size + spokenTokens.size) * 10;
-                    if(final > maxScore) { maxScore=final; bestMatch=h; }
-                });
-                return maxScore > 1.2 ? bestMatch : null;
+                let best=null, max=0;
+                const norm=(t)=>t.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/).map(w=>VERB_MAP[w]||w).filter(w=>!['a','an','the'].includes(w)).join(' ');
+                const expand=(t)=>{let e=norm(t);for(const[c,ws]of Object.entries(CONCEPT_MAP))if(ws.some(w=>e.includes(w)))e+=' '+c;return e;};
+                const sTok=new Set(expand(spoken).split(' '));
+                habitList.forEach(h=>{const hTok=new Set(expand(h).split(' '));let s=0;sTok.forEach(t=>{if(hTok.has(t))s+=(CONCEPT_MAP[t]?0.5:1);});const f=s/(hTok.size+sTok.size)*10;if(f>max){max=f;best=h;}});
+                return max>1.2?best:null;
             }
 
-            // --- CORE LOGIC ---
-            function loadData(){ habitList=JSON.parse(localStorage.getItem(LIST_KEY))||[...DEFAULT_HABITS];habitList.sort((a,b)=>a.localeCompare(b)); habits=JSON.parse(localStorage.getItem(HABIT_KEY))||[]; renderSelect(); renderHabits(); }
-            function saveData(){ localStorage.setItem(LIST_KEY,JSON.stringify(habitList)); localStorage.setItem(HABIT_KEY,JSON.stringify(habits)); }
-            function logHabit(text,timeStr){
-                const now=new Date();const[h,m]=timeStr.split(':');const d=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m);
-                habits.push({id:crypto.randomUUID(),text,label:'none',createdAt:d.getTime(),displayTime:timeStr});
-                saveData();renderHabits();els.habitSelect.value="";isTimeManuallyEdited=false;updateTimeInput();
-            }
+            function loadData(){habitList=JSON.parse(localStorage.getItem(LIST_KEY))||[...DEFAULT_HABITS];habitList.sort((a,b)=>a.localeCompare(b));habits=JSON.parse(localStorage.getItem(HABIT_KEY))||[];renderSelect();renderHabits();}
+            function saveData(){localStorage.setItem(LIST_KEY,JSON.stringify(habitList));localStorage.setItem(HABIT_KEY,JSON.stringify(habits));}
+            function logHabit(text,timeStr){habits.push({id:crypto.randomUUID(),text,label:'none',createdAt:new Date().getTime(),displayTime:timeStr});saveData();renderHabits();els.habitSelect.value="";isTimeManuallyEdited=false;updateTimeInput();}
             function renderSelect(){const c=els.habitSelect.value;els.habitSelect.innerHTML='<option value="" disabled selected>Select a habit...</option>'+habitList.map(h=>`<option value="${h}">${h}</option>`).join('');if(habitList.includes(c))els.habitSelect.value=c;}
             function renderHabits(){
                 if(habits.length===0){els.listContainer.innerHTML=`<div class="p-8 text-center text-gray-500">No habits logged yet.</div>`;els.clearBtn.style.display='none';return;}
@@ -182,80 +137,42 @@
                 els.listContainer.innerHTML=habits.map(h=>`<div class="p-4 flex items-center justify-between space-x-4"><div class="flex-1 min-w-0"><p class="text-lg font-medium">${h.text}</p><p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p></div><div class="flex-shrink-0 flex items-center space-x-2"><button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button><button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button><button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button><button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`).join('');
             }
 
-            // --- VOICE ---
-            if(window.SpeechRecognition||window.webkitSpeechRecognition){
-                recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
-                recognition.continuous=false;recognition.lang='en-US';recognition.maxAlternatives=1;
-                recognition.onstart=()=>{isRecording=true;els.voiceBtn.classList.add('recording')};
-                recognition.onend=()=>{isRecording=false;els.voiceBtn.classList.remove('recording')};
-                recognition.onresult=async(e)=>{
-                    let txt=e.results[0][0].transcript.toLowerCase().trim().replace(/^(please )?(log |add |track )?(that )?(i )?/,'').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-                    let time=getFormattedTime(new Date());
-                    const m=txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);
-                    if(m){txt=txt.replace(m[0],'').trim();try{let tStr=m[1].replace(/(am|pm)/g,'').trim(),h=0,min=0;if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;}if(m[1].includes('pm')&&h<12)h+=12;if(m[1].includes('am')&&h===12)h=0;time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;}catch(e){}}
-                    const match = await findBestMatch(txt);
-                    if(match) logHabit(match,time);
-                    else{pendingVoiceHabit={name:capitalize(txt),time};els.voice.name.textContent=pendingVoiceHabit.name;els.modals.voice.classList.remove('hidden');}
-                };
-                els.voiceBtn.addEventListener('click',()=>{if(isRecording)recognition.stop();else recognition.start();});
-            }else{els.voiceBtn.style.display='none';}
-
-            // --- ANALYSIS (AI + Heuristic Fallback) ---
             async function generateAnalysis() {
                 if(habits.length===0){els.analyze.content.innerHTML='<p class="text-center text-gray-500 py-8">No data yet.</p>';return;}
-                // Basic Stats
-                let pos=0,neg=0,neu=0; const times={Morning:{t:0,n:0},Afternoon:{t:0,n:0},Evening:{t:0,n:0},Night:{t:0,n:0}}, counts={};
-                habits.forEach(h=>{
-                    if(h.label==='positive')pos++;else if(h.label==='negative')neg++;else if(h.label==='neutral')neu++;
-                    counts[h.text]=(counts[h.text]||0)+1;
-                    const hr=parseInt(h.displayTime.split(':')[0]); let blk='Night';if(hr>=5&&hr<12)blk='Morning';else if(hr>=12&&hr<17)blk='Afternoon';else if(hr>=17&&hr<21)blk='Evening';
-                    times[blk].t++;if(h.label==='negative')times[blk].n++;
-                });
-                const net=pos-neg, total=habits.length, maxT=Math.max(...Object.values(times).map(v=>v.t));
-                const getPct=(v)=>total>0?((v/total)*100).toFixed(0):0;
-
-                // Generate Insight
-                let insight = "";
-                if (isAiReady && aiEngine) {
-                    els.analyze.status.textContent = "Asking AI Llama-3.2...";
-                    try {
-                        // Summarize data for AI to save tokens
-                        const summary = { total, net_score: net, top_habits: Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5), time_blocks: times };
-                        const prompt = `Analyze this habit data based on "Atomic Habits" principles. Be encouraging but direct. Keep it under 3 sentences.\nData: ${JSON.stringify(summary)}`;
-                        const reply = await aiEngine.chat.completions.create({ messages: [{ role: "user", content: prompt }], temperature: 0.7, max_gen_len: 150 });
-                        insight = reply.choices[0].message.content;
-                    } catch(e) { insight = "AI analysis failed. Falling back to standard insights."; }
+                let pos=0,neg=0,neu=0;const times={Morning:{t:0,n:0},Afternoon:{t:0,n:0},Evening:{t:0,n:0},Night:{t:0,n:0}},counts={};
+                habits.forEach(h=>{if(h.label==='positive')pos++;else if(h.label==='negative')neg++;else if(h.label==='neutral')neu++;counts[h.text]=(counts[h.text]||0)+1;const hr=parseInt(h.displayTime.split(':')[0]);let b='Night';if(hr>=5&&hr<12)b='Morning';else if(hr>=12&&hr<17)b='Afternoon';else if(hr>=17&&hr<21)b='Evening';times[b].t++;if(h.label==='negative')times[b].n++;});
+                const net=pos-neg,total=habits.length,maxT=Math.max(...Object.values(times).map(v=>v.t)),getPct=(v)=>total>0?((v/total)*100).toFixed(0):0;
+                
+                let insight="";
+                if(isAiReady&&aiEngine){
+                    els.analyze.status.textContent=`Asking ${AI_NAME}...`;
+                    try{const p=`Analyze habit data based on "Atomic Habits". Be encouraging but direct. Keep under 3 sentences.\nData: ${JSON.stringify({total,net_score:net,top_habits:Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5),time_blocks:times})}`;const r=await aiEngine.chat.completions.create({messages:[{role:"user",content:p}],temperature:0.7,max_gen_len:150});insight=r.choices[0].message.content;}catch(e){insight="Analysis failed. Falling back.";}
                 } else {
-                    // Heuristic Insight
-                    insight = total<5?"Keep logging to reveal patterns.":(net>(total*0.3)?"Great positive momentum!":(neg>pos?"Environment might be triggering negative loops.":"Balanced scorecard. Awareness is key."));
+                    insight=total<5?"Keep logging to reveal patterns.":(net>(total*0.3)?"Great positive momentum!":(neg>pos?"Environment might be triggering negative loops.":"Balanced scorecard. Awareness is key."));
                 }
-
-                // Render
-                els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm"><strong>🤖 Insight:</strong> ${insight}</div><div class="flex items-center justify-between bg-white p-4 mt-6 rounded-lg border shadow-sm"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mt-6 space-y-2"><h4 class="font-bold">Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div class="mt-6"><h4 class="font-bold mb-2">Activity Time</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
+                els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm relative"><strong>🤖 ${AI_NAME}:</strong> <span id="ai-insight-text">${insight}</span><button id="speak-insight-btn" class="absolute top-4 right-4 text-indigo-400 hover:text-indigo-700" title="Read Aloud"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg></button></div><div class="flex items-center justify-between bg-white p-4 mt-6 rounded-lg border shadow-sm"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mt-6 space-y-2"><h4 class="font-bold">Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div class="mt-6"><h4 class="font-bold mb-2">Activity Time</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
+                $('speak-insight-btn').onclick=()=>speak(insight);
             }
 
-            // --- LISTENERS & INIT ---
-            els.aiToggle.onclick=toggleAI;
-            els.habitForm.addEventListener('submit',(e)=>{e.preventDefault();if(els.habitSelect.value)logHabit(els.habitSelect.value,els.timeInput.value);});
-            els.timeInput.addEventListener('input',(e)=>{isTimeManuallyEdited=true;els.timeInputMobile.value=e.target.value;});
-            els.timeInputMobile.addEventListener('input',(e)=>{isTimeManuallyEdited=true;els.timeInput.value=e.target.value;});
-            els.habitSelect.addEventListener('change',()=>{isTimeManuallyEdited=false;updateTimeInput();});
-            els.listContainer.addEventListener('click',(e)=>{const btn=e.target.closest('button');if(!btn)return;const{id,label,action}=btn.dataset;if(label){const h=habits.find(i=>i.id===id);if(h){h.label=label;saveData();renderHabits();}}if(action==='delete'){habits=habits.filter(i=>i.id!==id);saveData();renderHabits();}});
+            if(window.SpeechRecognition||window.webkitSpeechRecognition){recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();recognition.continuous=false;recognition.lang='en-US';recognition.maxAlternatives=1;recognition.onstart=()=>{isRecording=true;els.voiceBtn.classList.add('recording')};recognition.onend=()=>{isRecording=false;els.voiceBtn.classList.remove('recording')};recognition.onresult=async(e)=>{let txt=e.results[0][0].transcript.toLowerCase().trim().replace(/^(please )?(log |add |track )?(that )?(i )?/,'').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");let time=getFormattedTime(new Date());const m=txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);if(m){txt=txt.replace(m[0],'').trim();try{let tStr=m[1].replace(/(am|pm)/g,'').trim(),h=0,min=0;if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;}if(m[1].includes('pm')&&h<12)h+=12;if(m[1].includes('am')&&h===12)h=0;time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;}catch(e){}}const match=await findBestMatch(txt);if(match)logHabit(match,time);else{pendingVoiceHabit={name:capitalize(txt),time};els.voice.name.textContent=pendingVoiceHabit.name;els.modals.voice.classList.remove('hidden');}};els.voiceBtn.addEventListener('click',()=>{if(isRecording)recognition.stop();else recognition.start();});}else{els.voiceBtn.style.display='none';}
+
+            els.habitForm.onsubmit=(e)=>{e.preventDefault();if(els.habitSelect.value)logHabit(els.habitSelect.value,els.timeInput.value);};
+            els.timeInput.oninput=(e)=>{isTimeManuallyEdited=true;els.timeInputMobile.value=e.target.value;};els.timeInputMobile.oninput=(e)=>{isTimeManuallyEdited=true;els.timeInput.value=e.target.value;};els.habitSelect.onchange=()=>{isTimeManuallyEdited=false;updateTimeInput();};
+            els.listContainer.onclick=(e)=>{const btn=e.target.closest('button');if(!btn)return;const{id,label,action}=btn.dataset;if(label){const h=habits.find(i=>i.id===id);if(h){h.label=label;saveData();renderHabits();}}if(action==='delete'){habits=habits.filter(i=>i.id!==id);saveData();renderHabits();}};
             els.clearBtn.onclick=()=>els.modals.confirm.classList.remove('hidden');els.confirm.cancel.onclick=()=>els.modals.confirm.classList.add('hidden');els.confirm.delete.onclick=()=>{habits=[];saveData();renderHabits();els.modals.confirm.classList.add('hidden');};
-            els.manageBtn.onclick=()=>{els.manage.list.innerHTML=habitList.map((h,i)=>`<li class="py-3 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1">${h}</span><div class="flex items-center space-x-2 opacity-50 group-hover:opacity-100"><button data-i="${i}" data-act="del" class="p-1 hover:text-red-600">X</button></div></li>`).join('');els.modals.manage.classList.remove('hidden');};
-            els.manage.close.onclick=()=>els.modals.manage.classList.add('hidden');
-            els.manage.list.onclick=(e)=>{const btn=e.target.closest('button');if(btn&&btn.dataset.act==='del'){habitList.splice(+btn.dataset.i,1);saveData();els.manageBtn.click();renderSelect();}};
-            els.manage.form.onsubmit=(e)=>{e.preventDefault();const v=els.manage.input.value.trim();if(v&&!habitList.includes(v)){habitList.push(v);habitList.sort();saveData();els.manageBtn.click();renderSelect();els.manage.input.value='';}};
-            els.manage.reset.onclick=()=>{if(confirm('Reset defaults?')){habitList=[...DEFAULT_HABITS];habitList.sort();saveData();els.manageBtn.click();renderSelect();}};
-            els.analyzeBtn.onclick=()=>{els.modals.analyze.classList.remove('hidden');els.analyze.content.classList.add('hidden');els.analyze.loading.classList.remove('hidden');els.analyze.status.textContent=isAiReady?"Asking AI...":"Thinking..."; setTimeout(async()=>{await generateAnalysis();els.analyze.loading.classList.add('hidden');els.analyze.content.classList.remove('hidden');},1000);};
-            els.analyze.close.onclick=()=>els.modals.analyze.classList.add('hidden');
+            els.manageBtn.onclick=()=>{renderManageList();els.modals.manage.classList.remove('hidden');};els.manage.close.onclick=()=>els.modals.manage.classList.add('hidden');
+            els.manage.list.onclick=(e)=>{const btn=e.target.closest('button');if(btn&&btn.dataset.act==='del'){habitList.splice(+btn.dataset.i,1);saveData();renderManageList();renderSelect();}};
+            els.manage.form.onsubmit=(e)=>{e.preventDefault();const v=els.manage.input.value.trim();if(v&&!habitList.includes(v)){habitList.push(v);habitList.sort();saveData();renderManageList();renderSelect();els.manage.input.value='';}};
+            els.manage.reset.onclick=()=>{if(confirm('Reset defaults?')){habitList=[...DEFAULT_HABITS];habitList.sort();saveData();renderManageList();renderSelect();}};
+            els.analyzeBtn.onclick=()=>{els.modals.analyze.classList.remove('hidden');els.analyze.content.classList.add('hidden');els.analyze.loading.classList.remove('hidden');els.analyze.status.textContent=isAiReady?`Asking ${AI_NAME}...`:"Thinking...";setTimeout(async()=>{await generateAnalysis();els.analyze.loading.classList.add('hidden');els.analyze.content.classList.remove('hidden');},1000);};
+            els.analyze.close.onclick={()=>{els.modals.analyze.classList.add('hidden');window.speechSynthesis.cancel();};
+            els.aiToggle.onclick=toggleAI;
             els.voice.add.onclick=()=>{habitList.push(pendingVoiceHabit.name);habitList.sort();saveData();renderSelect();logHabit(pendingVoiceHabit.name,pendingVoiceHabit.time);els.modals.voice.classList.add('hidden');};
             els.voice.log.onclick=()=>{logHabit(pendingVoiceHabit.name,pendingVoiceHabit.time);els.modals.voice.classList.add('hidden');};
             els.voice.cancel.onclick=()=>els.modals.voice.classList.add('hidden');
 
-            updateTimeInput(); loadData();
-            document.addEventListener('visibilitychange', ()=>{if(!document.hidden) updateTimeInput();});
-            setInterval(updateTimeInput, 60000);
+            updateTimeInput();loadData();initTTS();
+            document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateTimeInput();});setInterval(updateTimeInput,60000);
         });
     </script>
     <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}</script>
