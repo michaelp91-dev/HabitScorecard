@@ -58,11 +58,6 @@
             max-width: 90%;
             width: 400px;
         }
-        /* Special style for the Manage option in dropdown */
-        option.manage-option {
-            font-weight: 600;
-            color: #111827;
-        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-full flex flex-col">
@@ -79,9 +74,17 @@
             
             <div id="view-scorecard">
                 <form id="add-habit-form" class="flex items-center space-x-3 mb-6">
-                    <select id="habit-select" class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
-                        <option value="" disabled selected>Select a habit...</option>
-                        </select>
+                    <div class="flex-1 flex items-center space-x-2">
+                        <button type="button" id="manage-habits-btn" class="p-3 text-gray-400 hover:text-gray-900 transition-colors" title="Manage Habit List">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                        <select id="habit-select" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
+                            <option value="" disabled selected>Select a habit...</option>
+                            </select>
+                    </div>
                     <input type="time" id="habit-time-input" class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
                     <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
                         Add
@@ -179,6 +182,7 @@
         const habitTimeInput = document.getElementById('habit-time-input');
         const habitListContainer = document.getElementById('habit-list-container');
         const clearAllHabitsButton = document.getElementById('clear-all-habits-button');
+        const manageHabitsBtn = document.getElementById('manage-habits-btn');
 
         // Confirm Modal Elements
         const confirmModal = document.getElementById('confirm-modal');
@@ -225,9 +229,7 @@
         }
 
         function renderHabitSelect() {
-            // Keep selected value if possible after re-render
             const currentSelection = habitSelect.value;
-
             habitSelect.innerHTML = '<option value="" disabled selected>Select a habit...</option>';
             habitList.forEach(habit => {
                 const option = document.createElement('option');
@@ -235,13 +237,6 @@
                 option.textContent = habit;
                 habitSelect.appendChild(option);
             });
-            // Add the special manage option at the end
-            const manageOption = document.createElement('option');
-            manageOption.value = "__MANAGE__";
-            manageOption.textContent = "⚙️ Manage List...";
-            manageOption.className = "manage-option";
-            habitSelect.appendChild(manageOption);
-
             if (currentSelection && habitList.includes(currentSelection)) {
                 habitSelect.value = currentSelection;
             }
@@ -254,10 +249,6 @@
 
         function closeManageModal() {
             manageModal.classList.add('hidden');
-            // Reset select if it was left on "__MANAGE__"
-            if (habitSelect.value === "__MANAGE__") {
-                 habitSelect.value = "";
-            }
         }
 
         function renderManageList() {
@@ -318,12 +309,10 @@
             `;
             const input = li.querySelector('.edit-input');
             input.focus();
-            input.select(); // Auto-select text for easy replacement
+            input.select();
 
-            // Add temporary listeners for save/cancel
             li.querySelector('.save-edit-btn').onclick = () => saveEdit(index, input.value);
-            li.querySelector('.cancel-edit-btn').onclick = () => renderManageList(); // Re-render to cancel
-            // Save on enter key
+            li.querySelector('.cancel-edit-btn').onclick = () => renderManageList();
             input.onkeydown = (e) => { if(e.key === 'Enter') saveEdit(index, input.value); };
         }
 
@@ -393,10 +382,6 @@
         function addHabit(e) {
             e.preventDefault();
             const habitText = habitSelect.value;
-            
-            // Safety check: don't add if it's the Manage option or empty
-            if (!habitText || habitText === '__MANAGE__') return;
-
             const habitTime = habitTimeInput.value;
             if (habitText && habitTime) {
                 const now = new Date();
@@ -445,30 +430,18 @@
 
         function initialize() {
             updateTimeInput();
-            loadHabitList(); // Loads list and renders select
+            loadHabitList(); 
             loadHabits();
             renderHabits();
 
             // --- Event Listeners ---
-            
-            // Main Habit Add Form
             habitForm.addEventListener('submit', addHabit);
-
-            // Manual time input tracking
             habitTimeInput.addEventListener('input', () => { isTimeManuallyEdited = true; });
-
-            // Dropdown change listener
             habitSelect.addEventListener('change', (e) => {
-                 if (e.target.value === '__MANAGE__') {
-                     openManageModal();
-                 } else {
-                     // Normal habit selected: reset time to now
-                     isTimeManuallyEdited = false;
-                     updateTimeInput();
-                 }
+                 isTimeManuallyEdited = false;
+                 updateTimeInput();
             });
 
-            // Habit List Actions (Labeling/Deleting logged habits)
             habitListContainer.addEventListener('click', (e) => {
                 const button = e.target.closest('button');
                 if (!button) return;
@@ -477,12 +450,13 @@
                 if (action === 'delete-habit') { deleteHabit(id); return; }
             });
 
-            // Clear All Modal
             clearAllHabitsButton.addEventListener('click', () => confirmModal.classList.remove('hidden'));
             document.getElementById('cancel-delete-button').addEventListener('click', () => confirmModal.classList.add('hidden'));
             document.getElementById('confirm-delete-button').addEventListener('click', clearAllHabits);
 
-            // Manage Modal Actions
+            // Manage button listener
+            manageHabitsBtn.addEventListener('click', openManageModal);
+
             closeManageModalBtn.addEventListener('click', closeManageModal);
             manageListEl.addEventListener('click', handleManageListClick);
             manageAddForm.addEventListener('submit', (e) => {
