@@ -207,7 +207,6 @@
         let isTimeManuallyEdited = false; 
         let recognition = null;
         let isRecording = false;
-        // Temporary storage for voice confirmation
         let pendingVoiceHabit = { name: null, time: null };
 
         const DEFAULT_HABITS = [
@@ -223,6 +222,15 @@
             "Take a shower", "Tidy up living space", "Turn off alarm", "Wake up",
             "Wash dishes", "Watch TV", "Weigh myself"
         ];
+
+        // NEW: Dictionary for simple verb normalization
+        const VERB_MAP = {
+            'woke': 'wake', 'drank': 'drink', 'ate': 'eat', 'went': 'go',
+            'did': 'do', 'took': 'take', 'bought': 'buy', 'read': 'read',
+            'brushed': 'brush', 'flossed': 'floss', 'fed': 'feed', 'made': 'make',
+            'sat': 'sit', 'stood': 'stand', 'ran': 'run', 'walked': 'walk',
+            'cooked': 'cook', 'washed': 'wash', 'watched': 'watch', 'checked': 'check'
+        };
 
         // --- DOM Elements ---
         const habitForm = document.getElementById('add-habit-form');
@@ -269,6 +277,55 @@
 
         function capitalizeFirstLetter(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // --- Smart Matching Logic ---
+
+        function normalizeText(text) {
+            return text.toLowerCase()
+                // Remove punctuation
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+                // Split into words
+                .split(/\s+/)
+                // Map verbs to present tense
+                .map(word => VERB_MAP[word] || word)
+                // Remove common filler words for better matching
+                .filter(word => !['a', 'an', 'the', 'my', 'some'].includes(word))
+                .join(' ');
+        }
+
+        function findBestMatch(spokenText) {
+            const normalizedSpoken = normalizeText(spokenText);
+            const spokenTokens = new Set(normalizedSpoken.split(' '));
+
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const habit of habitList) {
+                const normalizedHabit = normalizeText(habit);
+                const habitTokens = new Set(normalizedHabit.split(' '));
+                
+                // Calculate overlap score (Jaccard index-ish)
+                let intersection = 0;
+                for (const token of spokenTokens) {
+                    if (habitTokens.has(token)) {
+                        intersection++;
+                    }
+                }
+                
+                // Score based on how much of the LIST item is covered by spoken words
+                // This helps "ate fruit" match "Eat a fruit / vegetable"
+                const score = intersection / habitTokens.size;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = habit;
+                }
+            }
+
+            // Threshold: needs at least 50% of key tokens to match to be considered "good enough"
+            // For 2-word habits like "Wake up", matching both is 100%, matching one is 50%.
+            return bestScore >= 0.5 ? bestMatch : null;
         }
 
         // --- Voice Recognition Functions ---
@@ -333,19 +390,25 @@
                 timeValue = parseSpokenTime(timeStr);
             }
 
-            // Try to find EXACT match in list (ignoring case)
-            const matchedHabit = habitList.find(h => h.toLowerCase() === habitNameRaw);
-
-            if (matchedHabit) {
-                // Match found: Log it immediately
-                logHabit(matchedHabit, timeValue);
-            } else {
-                // No match: Ask user what to do
-                const formattedName = capitalizeFirstLetter(habitNameRaw);
-                pendingVoiceHabit = { name: formattedName, time: timeValue };
-                voiceHabitNameEl.textContent = formattedName;
-                voiceModal.classList.remove('hidden');
+            // 1. Try exact match first
+            const exactMatch = habitList.find(h => h.toLowerCase() === habitNameRaw);
+            if (exactMatch) {
+                logHabit(exactMatch, timeValue);
+                return;
             }
+
+            // 2. Try smart match
+            const smartMatch = findBestMatch(habitNameRaw);
+            if (smartMatch) {
+                logHabit(smartMatch, timeValue);
+                return;
+            }
+
+            // 3. No good match: Ask user
+            const formattedName = capitalizeFirstLetter(habitNameRaw);
+            pendingVoiceHabit = { name: formattedName, time: timeValue };
+            voiceHabitNameEl.textContent = formattedName;
+            voiceModal.classList.remove('hidden');
         }
 
         function parseSpokenTime(timeStr) {
