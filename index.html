@@ -47,14 +47,21 @@
             transform: scale(0.95);
         }
         
+        .modal-overlay {
+            background-color: rgba(17, 24, 39, 0.5); /* Gray 900 with opacity */
+        }
         .modal-content {
             background-color: #ffffff;
             border: 1px solid #e5e7eb;
-            padding: 1.5rem;
             border-radius: 0.5rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             max-width: 90%;
             width: 400px;
+        }
+        /* Special style for the Manage option in dropdown */
+        option.manage-option {
+            font-weight: 600;
+            color: #111827;
         }
     </style>
 </head>
@@ -96,8 +103,38 @@
         </div>
     </main>
 
-    <div id="confirm-modal" class="hidden fixed top-0 left-0 right-0 bottom-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 px-4">
-        <div class="modal-content bg-white">
+    <div id="manage-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Manage Habit List</h3>
+                <button id="close-manage-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <form id="manage-add-form" class="flex space-x-2">
+                    <input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" required>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                        Add
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-2">
+                <ul id="manage-list" class="divide-y divide-gray-100">
+                    </ul>
+            </div>
+             <div class="p-4 border-t border-gray-200 text-center bg-gray-50">
+                 <button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset to Defaults</button>
+             </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content p-6 bg-white">
             <h3 id="modal-title" class="text-lg font-bold leading-6 text-gray-900">Clear All Habits?</h3>
             <div class="mt-2">
                 <p id="modal-text" class="text-base text-gray-500">Are you sure you want to delete all habits? This action cannot be undone.</p>
@@ -116,53 +153,24 @@
     <script type="module">
         // --- App State ---
         let habits = [];
+        let habitList = []; // The list of available habits in the dropdown
         const HABIT_STORAGE_KEY = 'habitScorecardApp.habits';
+        const LIST_STORAGE_KEY = 'habitScorecardApp.list';
+        let isTimeManuallyEdited = false; 
 
-        // Predefined habits sorted alphabetically
-        const predefinedHabits = [
-            "Attend meeting",
-            "Bite nails",
-            "Brush teeth",
-            "Buy something unnecessary",
-            "Call a friend / family member",
-            "Check email",
-            "Check phone",
-            "Commute to work / school",
-            "Cook dinner",
-            "Do laundry",
-            "Drink water",
-            "Eat a fruit / vegetable",
-            "Eat breakfast",
-            "Eat dinner",
-            "Eat lunch",
-            "Eat sugar / snacks",
-            "Exercise / Workout",
-            "Feed pet",
-            "Floss teeth",
-            "Get dressed",
-            "Go for a walk",
-            "Go to bathroom",
-            "Go to bed",
-            "Journal",
-            "Make bed",
-            "Make coffee / tea",
-            "Meditate",
-            "Plan tomorrow's to-do list",
-            "Practice a hobby",
-            "Read a book",
-            "Scroll social media",
-            "Set alarm for tomorrow",
-            "Skincare routine",
-            "Smoke cigarette",
-            "Stretch",
-            "Take a break",
-            "Take a shower",
-            "Tidy up living space",
-            "Turn off alarm",
-            "Wake up",
-            "Wash dishes",
-            "Watch TV",
-            "Weigh myself"
+        // Default habits if none are saved
+        const DEFAULT_HABITS = [
+            "Attend meeting", "Bite nails", "Brush teeth", "Buy something unnecessary",
+            "Call a friend / family member", "Check email", "Check phone", "Commute to work / school",
+            "Cook dinner", "Do laundry", "Drink water", "Eat a fruit / vegetable",
+            "Eat breakfast", "Eat dinner", "Eat lunch", "Eat sugar / snacks",
+            "Exercise / Workout", "Feed pet", "Floss teeth", "Get dressed",
+            "Go for a walk", "Go to bathroom", "Go to bed", "Journal",
+            "Make bed", "Make coffee / tea", "Meditate", "Plan tomorrow's to-do list",
+            "Practice a hobby", "Read a book", "Scroll social media", "Set alarm for tomorrow",
+            "Skincare routine", "Smoke cigarette", "Stretch", "Take a break",
+            "Take a shower", "Tidy up living space", "Turn off alarm", "Wake up",
+            "Wash dishes", "Watch TV", "Weigh myself"
         ];
 
         // --- DOM Elements ---
@@ -172,10 +180,18 @@
         const habitListContainer = document.getElementById('habit-list-container');
         const clearAllHabitsButton = document.getElementById('clear-all-habits-button');
 
-        // Modal Elements
+        // Confirm Modal Elements
         const confirmModal = document.getElementById('confirm-modal');
         const confirmDeleteButton = document.getElementById('confirm-delete-button');
         const cancelDeleteButton = document.getElementById('cancel-delete-button');
+
+        // Manage Modal Elements
+        const manageModal = document.getElementById('manage-modal');
+        const closeManageModalBtn = document.getElementById('close-manage-modal');
+        const manageListEl = document.getElementById('manage-list');
+        const manageAddForm = document.getElementById('manage-add-form');
+        const manageAddInput = document.getElementById('manage-add-input');
+        const resetDefaultsBtn = document.getElementById('reset-defaults-button');
 
         // --- Core Functions ---
 
@@ -186,10 +202,142 @@
         }
 
         function updateTimeInput() {
-            habitTimeInput.value = getFormattedTime(new Date());
+            if (!isTimeManuallyEdited) {
+                habitTimeInput.value = getFormattedTime(new Date());
+            }
         }
 
-        // --- Habit Functions ---
+        // --- List Management Functions ---
+
+        function loadHabitList() {
+            const storedList = localStorage.getItem(LIST_STORAGE_KEY);
+            habitList = storedList ? JSON.parse(storedList) : [...DEFAULT_HABITS];
+            sortHabitList();
+        }
+
+        function saveHabitList() {
+            localStorage.setItem(LIST_STORAGE_KEY, JSON.stringify(habitList));
+            renderHabitSelect();
+        }
+
+        function sortHabitList() {
+            habitList.sort((a, b) => a.localeCompare(b));
+        }
+
+        function renderHabitSelect() {
+            // Keep selected value if possible after re-render
+            const currentSelection = habitSelect.value;
+
+            habitSelect.innerHTML = '<option value="" disabled selected>Select a habit...</option>';
+            habitList.forEach(habit => {
+                const option = document.createElement('option');
+                option.value = habit;
+                option.textContent = habit;
+                habitSelect.appendChild(option);
+            });
+            // Add the special manage option at the end
+            const manageOption = document.createElement('option');
+            manageOption.value = "__MANAGE__";
+            manageOption.textContent = "⚙️ Manage List...";
+            manageOption.className = "manage-option";
+            habitSelect.appendChild(manageOption);
+
+            if (currentSelection && habitList.includes(currentSelection)) {
+                habitSelect.value = currentSelection;
+            }
+        }
+
+        function openManageModal() {
+            renderManageList();
+            manageModal.classList.remove('hidden');
+        }
+
+        function closeManageModal() {
+            manageModal.classList.add('hidden');
+            // Reset select if it was left on "__MANAGE__"
+            if (habitSelect.value === "__MANAGE__") {
+                 habitSelect.value = "";
+            }
+        }
+
+        function renderManageList() {
+            manageListEl.innerHTML = '';
+            habitList.forEach((habit, index) => {
+                const li = document.createElement('li');
+                li.className = "py-3 px-2 flex items-center justify-between group hover:bg-gray-50 rounded";
+                li.innerHTML = `
+                    <span class="text-gray-900 flex-1">${habit}</span>
+                    <div class="flex items-center space-x-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <button data-index="${index}" data-action="edit-list-item" class="p-1 text-gray-500 hover:text-blue-600" title="Edit">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                             </svg>
+                        </button>
+                        <button data-index="${index}" data-action="delete-list-item" class="p-1 text-gray-500 hover:text-red-600" title="Delete">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                manageListEl.appendChild(li);
+            });
+        }
+
+        function handleManageListClick(e) {
+             const button = e.target.closest('button');
+             if (!button) return;
+             const index = parseInt(button.dataset.index);
+             const action = button.dataset.action;
+
+             if (action === 'delete-list-item') {
+                 habitList.splice(index, 1);
+                 saveHabitList();
+                 renderManageList();
+             } else if (action === 'edit-list-item') {
+                 enableInlineEdit(button.closest('li'), index);
+             }
+        }
+
+        function enableInlineEdit(li, index) {
+            const currentText = habitList[index];
+            li.innerHTML = `
+                <form class="flex-1 flex items-center space-x-2" onsubmit="event.preventDefault();">
+                     <input type="text" class="edit-input flex-1 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-1" value="${currentText}">
+                     <button type="button" data-index="${index}" class="save-edit-btn p-1 text-green-600 hover:text-green-800" title="Save">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                     </button>
+                     <button type="button" class="cancel-edit-btn p-1 text-gray-500 hover:text-gray-700" title="Cancel">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                     </button>
+                </form>
+            `;
+            const input = li.querySelector('.edit-input');
+            input.focus();
+            input.select(); // Auto-select text for easy replacement
+
+            // Add temporary listeners for save/cancel
+            li.querySelector('.save-edit-btn').onclick = () => saveEdit(index, input.value);
+            li.querySelector('.cancel-edit-btn').onclick = () => renderManageList(); // Re-render to cancel
+            // Save on enter key
+            input.onkeydown = (e) => { if(e.key === 'Enter') saveEdit(index, input.value); };
+        }
+
+        function saveEdit(index, newValue) {
+            const trimmed = newValue.trim();
+            if (trimmed) {
+                habitList[index] = trimmed;
+                sortHabitList();
+                saveHabitList();
+                renderManageList();
+            }
+        }
+
+        // --- Habit Scoring Functions ---
 
         function renderHabits() {
             habitListContainer.innerHTML = ''; 
@@ -245,6 +393,10 @@
         function addHabit(e) {
             e.preventDefault();
             const habitText = habitSelect.value;
+            
+            // Safety check: don't add if it's the Manage option or empty
+            if (!habitText || habitText === '__MANAGE__') return;
+
             const habitTime = habitTimeInput.value;
             if (habitText && habitTime) {
                 const now = new Date();
@@ -261,9 +413,9 @@
                 saveHabits();
                 renderHabits();
                 
-                // Reset form
                 habitSelect.value = "";
-                updateTimeInput();
+                isTimeManuallyEdited = false; 
+                updateTimeInput(); 
             }
         }
 
@@ -289,35 +441,34 @@
             hideConfirmModal();
         }
 
-        // --- Modal Functions ---
-        
-        function showConfirmModal() {
-            confirmModal.classList.remove('hidden');
-        }
-
-        function hideConfirmModal() {
-            confirmModal.classList.add('hidden');
-        }
-
         // --- Initialization ---
 
         function initialize() {
             updateTimeInput();
-
-            // Populate Select Dropdown
-            predefinedHabits.forEach(habit => {
-                const option = document.createElement('option');
-                option.value = habit;
-                option.textContent = habit;
-                habitSelect.appendChild(option);
-            });
-
+            loadHabitList(); // Loads list and renders select
             loadHabits();
             renderHabits();
 
-            // Event Listeners
+            // --- Event Listeners ---
+            
+            // Main Habit Add Form
             habitForm.addEventListener('submit', addHabit);
 
+            // Manual time input tracking
+            habitTimeInput.addEventListener('input', () => { isTimeManuallyEdited = true; });
+
+            // Dropdown change listener
+            habitSelect.addEventListener('change', (e) => {
+                 if (e.target.value === '__MANAGE__') {
+                     openManageModal();
+                 } else {
+                     // Normal habit selected: reset time to now
+                     isTimeManuallyEdited = false;
+                     updateTimeInput();
+                 }
+            });
+
+            // Habit List Actions (Labeling/Deleting logged habits)
             habitListContainer.addEventListener('click', (e) => {
                 const button = e.target.closest('button');
                 if (!button) return;
@@ -326,16 +477,37 @@
                 if (action === 'delete-habit') { deleteHabit(id); return; }
             });
 
-            clearAllHabitsButton.addEventListener('click', showConfirmModal);
-            cancelDeleteButton.addEventListener('click', hideConfirmModal);
-            confirmDeleteButton.addEventListener('click', clearAllHabits);
+            // Clear All Modal
+            clearAllHabitsButton.addEventListener('click', () => confirmModal.classList.remove('hidden'));
+            document.getElementById('cancel-delete-button').addEventListener('click', () => confirmModal.classList.add('hidden'));
+            document.getElementById('confirm-delete-button').addEventListener('click', clearAllHabits);
 
-            // Listen for visibility change to update time when user returns to tab
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    updateTimeInput();
+            // Manage Modal Actions
+            closeManageModalBtn.addEventListener('click', closeManageModal);
+            manageListEl.addEventListener('click', handleManageListClick);
+            manageAddForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newVal = manageAddInput.value.trim();
+                if (newVal && !habitList.includes(newVal)) {
+                    habitList.push(newVal);
+                    sortHabitList();
+                    saveHabitList();
+                    renderManageList();
+                    manageAddInput.value = '';
                 }
             });
+            resetDefaultsBtn.addEventListener('click', () => {
+                if(confirm("Reset the habit list to the original defaults? Your custom habits will be lost.")) {
+                    habitList = [...DEFAULT_HABITS];
+                    sortHabitList();
+                    saveHabitList();
+                    renderManageList();
+                }
+            });
+
+            // Auto-update triggers
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) updateTimeInput(); });
+            setInterval(updateTimeInput, 60000);
         }
 
         initialize();
