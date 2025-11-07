@@ -58,6 +58,18 @@
             max-width: 90%;
             width: 400px;
         }
+
+        /* Recording animation */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .recording {
+            animation: pulse-red 1.5s infinite;
+            color: #ef4444 !important; /* Red-500 */
+            border-color: #ef4444 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-full flex flex-col">
@@ -73,9 +85,9 @@
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div id="view-scorecard">
-                <form id="add-habit-form" class="flex items-center space-x-3 mb-6">
+                <form id="add-habit-form" class="flex items-center space-x-2 sm:space-x-3 mb-6">
                     <div class="flex-1 flex items-center space-x-2">
-                        <button type="button" id="manage-habits-btn" class="p-3 text-gray-400 hover:text-gray-900 transition-colors" title="Manage Habit List">
+                        <button type="button" id="manage-habits-btn" class="p-3 text-gray-400 hover:text-gray-900 transition-colors flex-shrink-0" title="Manage Habit List">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -85,11 +97,22 @@
                             <option value="" disabled selected>Select a habit...</option>
                             </select>
                     </div>
-                    <input type="time" id="habit-time-input" class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
+                    <input type="time" id="habit-time-input" class="hidden sm:block w-32 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
+                    
+                    <button type="button" id="voice-log-btn" class="inline-flex items-center justify-center p-3 border border-gray-300 text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all" title="Voice Log">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </button>
+
                     <button type="submit" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
                         Add
                     </button>
                 </form>
+
+                <div class="sm:hidden mb-4">
+                     <input type="time" id="habit-time-input-mobile" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black text-base p-3" required>
+                </div>
 
                 <div class="bg-white shadow rounded-lg border border-gray-200">
                     <div id="habit-list-container" class="divide-y divide-gray-200">
@@ -156,12 +179,13 @@
     <script type="module">
         // --- App State ---
         let habits = [];
-        let habitList = []; // The list of available habits in the dropdown
+        let habitList = [];
         const HABIT_STORAGE_KEY = 'habitScorecardApp.habits';
         const LIST_STORAGE_KEY = 'habitScorecardApp.list';
         let isTimeManuallyEdited = false; 
+        let recognition = null;
+        let isRecording = false;
 
-        // Default habits if none are saved
         const DEFAULT_HABITS = [
             "Attend meeting", "Bite nails", "Brush teeth", "Buy something unnecessary",
             "Call a friend / family member", "Check email", "Check phone", "Commute to work / school",
@@ -180,16 +204,14 @@
         const habitForm = document.getElementById('add-habit-form');
         const habitSelect = document.getElementById('habit-select');
         const habitTimeInput = document.getElementById('habit-time-input');
+        const habitTimeInputMobile = document.getElementById('habit-time-input-mobile'); // Sync these two
         const habitListContainer = document.getElementById('habit-list-container');
         const clearAllHabitsButton = document.getElementById('clear-all-habits-button');
         const manageHabitsBtn = document.getElementById('manage-habits-btn');
+        const voiceLogBtn = document.getElementById('voice-log-btn');
 
-        // Confirm Modal Elements
+        // Modals
         const confirmModal = document.getElementById('confirm-modal');
-        const confirmDeleteButton = document.getElementById('confirm-delete-button');
-        const cancelDeleteButton = document.getElementById('cancel-delete-button');
-
-        // Manage Modal Elements
         const manageModal = document.getElementById('manage-modal');
         const closeManageModalBtn = document.getElementById('close-manage-modal');
         const manageListEl = document.getElementById('manage-list');
@@ -205,10 +227,147 @@
             return `${hours}:${minutes}`;
         }
 
-        function updateTimeInput() {
-            if (!isTimeManuallyEdited) {
-                habitTimeInput.value = getFormattedTime(new Date());
+        function updateTimeInput(forceTime = null) {
+            const timeStr = forceTime || getFormattedTime(new Date());
+            if (!isTimeManuallyEdited || forceTime) {
+                habitTimeInput.value = timeStr;
+                habitTimeInputMobile.value = timeStr;
             }
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // --- Voice Recognition Functions ---
+
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                voiceLogBtn.style.display = 'none'; // Hide if not supported
+                console.warn("Speech Recognition not supported in this browser.");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                voiceLogBtn.classList.add('recording');
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                voiceLogBtn.classList.remove('recording');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('Voice result:', transcript);
+                parseAndLogVoiceCommand(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                isRecording = false;
+                voiceLogBtn.classList.remove('recording');
+                alert("Voice recognition error: " + event.error);
+            };
+
+            voiceLogBtn.addEventListener('click', () => {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        }
+
+        function parseAndLogVoiceCommand(text) {
+            // Normalize
+            let cleanText = text.toLowerCase().trim();
+            
+            // Remove common starter phrases
+            cleanText = cleanText.replace(/^(please )?(log |add |track )?(that )?(i )?/, '');
+
+            // Default to now
+            let timeValue = getFormattedTime(new Date());
+            let habitName = cleanText;
+
+            // Detect "at [TIME]" pattern
+            // Matches: " at 5", " at 5:30", " at 5pm", " at 5:30 pm", " at 1700"
+            const timeRegex = / at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i;
+            const timeMatch = cleanText.match(timeRegex);
+
+            if (timeMatch) {
+                const timeStr = timeMatch[1];
+                habitName = cleanText.replace(timeRegex, '').trim();
+                timeValue = parseSpokenTime(timeStr);
+            }
+
+            habitName = capitalizeFirstLetter(habitName);
+
+            if (habitName) {
+                // Directly add the habit, bypassing the form/select 
+                logHabit(habitName, timeValue);
+            }
+        }
+
+        function parseSpokenTime(timeStr) {
+            try {
+                let hours = 0, minutes = 0;
+                const isPM = timeStr.toLowerCase().includes('pm');
+                const isAM = timeStr.toLowerCase().includes('am');
+                let cleanStr = timeStr.toLowerCase().replace(/(am|pm)/g, '').trim();
+
+                if (cleanStr.length === 4 && !cleanStr.includes(':')) {
+                     // Military: 0700
+                    hours = parseInt(cleanStr.substring(0, 2));
+                    minutes = parseInt(cleanStr.substring(2, 4));
+                } else if (cleanStr.includes(':')) {
+                    const parts = cleanStr.split(':');
+                    hours = parseInt(parts[0]);
+                    minutes = parseInt(parts[1]);
+                } else {
+                    hours = parseInt(cleanStr);
+                }
+
+                if (isPM && hours < 12) hours += 12;
+                if (isAM && hours === 12) hours = 0;
+
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            } catch (e) {
+                console.warn("Failed to parse spoken time, using current time.", e);
+                return getFormattedTime(new Date());
+            }
+        }
+
+        // --- Habit Core Functions ---
+
+        function logHabit(text, timeStr) {
+             const now = new Date();
+             const [hours, minutes] = timeStr.split(':');
+             const habitDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+             
+             const newHabit = {
+                id: crypto.randomUUID(),
+                text: text,
+                label: 'none',
+                createdAt: habitDate.getTime(),
+                displayTime: timeStr
+            };
+            habits.push(newHabit);
+            saveHabits();
+            renderHabits();
+            
+            // Reset UI states
+            habitSelect.value = "";
+            isTimeManuallyEdited = false; 
+            updateTimeInput(); 
         }
 
         // --- List Management Functions ---
@@ -326,12 +485,12 @@
             }
         }
 
-        // --- Habit Scoring Functions ---
+        // --- Habit Rendering & Storage ---
 
         function renderHabits() {
             habitListContainer.innerHTML = ''; 
             if (habits.length === 0) {
-                habitListContainer.innerHTML = `<div class="p-8 text-center text-gray-500">No habits logged yet. Select one above to get started.</div>`;
+                habitListContainer.innerHTML = `<div class="p-8 text-center text-gray-500">No habits logged yet. Select one or use voice to start.</div>`;
                 clearAllHabitsButton.style.display = 'none';
                 return;
             }
@@ -379,28 +538,12 @@
             habits = JSON.parse(localStorage.getItem(HABIT_STORAGE_KEY)) || [];
         }
 
-        function addHabit(e) {
+        function addHabitFromForm(e) {
             e.preventDefault();
             const habitText = habitSelect.value;
             const habitTime = habitTimeInput.value;
             if (habitText && habitTime) {
-                const now = new Date();
-                const [hours, minutes] = habitTime.split(':');
-                const habitDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-                const newHabit = {
-                    id: crypto.randomUUID(),
-                    text: habitText,
-                    label: 'none',
-                    createdAt: habitDate.getTime(),
-                    displayTime: habitTime
-                };
-                habits.push(newHabit);
-                saveHabits();
-                renderHabits();
-                
-                habitSelect.value = "";
-                isTimeManuallyEdited = false; 
-                updateTimeInput(); 
+                logHabit(habitText, habitTime);
             }
         }
 
@@ -423,7 +566,7 @@
             habits = [];
             saveHabits(); 
             renderHabits(); 
-            hideConfirmModal();
+            document.getElementById('confirm-modal').classList.add('hidden');
         }
 
         // --- Initialization ---
@@ -433,11 +576,22 @@
             loadHabitList(); 
             loadHabits();
             renderHabits();
+            initVoiceRecognition();
 
             // --- Event Listeners ---
-            habitForm.addEventListener('submit', addHabit);
-            habitTimeInput.addEventListener('input', () => { isTimeManuallyEdited = true; });
-            habitSelect.addEventListener('change', (e) => {
+            habitForm.addEventListener('submit', addHabitFromForm);
+            
+            // Sync the two time inputs (mobile vs desktop view)
+            habitTimeInput.addEventListener('input', (e) => { 
+                isTimeManuallyEdited = true; 
+                habitTimeInputMobile.value = e.target.value;
+            });
+            habitTimeInputMobile.addEventListener('input', (e) => {
+                 isTimeManuallyEdited = true;
+                 habitTimeInput.value = e.target.value;
+            });
+
+            habitSelect.addEventListener('change', () => {
                  isTimeManuallyEdited = false;
                  updateTimeInput();
             });
@@ -450,13 +604,11 @@
                 if (action === 'delete-habit') { deleteHabit(id); return; }
             });
 
-            clearAllHabitsButton.addEventListener('click', () => confirmModal.classList.remove('hidden'));
-            document.getElementById('cancel-delete-button').addEventListener('click', () => confirmModal.classList.add('hidden'));
+            clearAllHabitsButton.addEventListener('click', () => document.getElementById('confirm-modal').classList.remove('hidden'));
+            document.getElementById('cancel-delete-button').addEventListener('click', () => document.getElementById('confirm-modal').classList.add('hidden'));
             document.getElementById('confirm-delete-button').addEventListener('click', clearAllHabits);
 
-            // Manage button listener
             manageHabitsBtn.addEventListener('click', openManageModal);
-
             closeManageModalBtn.addEventListener('click', closeManageModal);
             manageListEl.addEventListener('click', handleManageListClick);
             manageAddForm.addEventListener('submit', (e) => {
