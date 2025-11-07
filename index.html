@@ -70,14 +70,38 @@
             color: #ef4444 !important; /* Red-500 */
             border-color: #ef4444 !important;
         }
+
+        /* AI Loading Shimmer */
+        .shimmer {
+            animation-duration: 2s;
+            animation-fill-mode: forwards;
+            animation-iteration-count: infinite;
+            animation-name: shimmer;
+            animation-timing-function: linear;
+            background: #f6f7f8;
+            background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+            background-size: 1200px 100%;
+        }
+        @keyframes shimmer {
+            0% { background-position: -1200px 0; }
+            100% { background-position: 1200px 0; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-full flex flex-col">
 
     <header class="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <h1 class="text-2xl font-bold text-gray-900">Habit Scorecard</h1>
-            <p class="text-sm text-gray-500">Based on Atomic Habits by James Clear</p>
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Habit Scorecard</h1>
+                <p class="text-sm text-gray-500">Based on Atomic Habits by James Clear</p>
+            </div>
+            <button id="analyze-btn" class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Analyze
+            </button>
         </div>
     </header>
 
@@ -159,6 +183,31 @@
         </div>
     </div>
 
+    <div id="analyze-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50">
+             <div class="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Smart Analysis
+                </h3>
+                <button id="close-analyze-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="analyze-loading" class="hidden p-8 space-y-4">
+                <div class="h-4 bg-gray-200 rounded shimmer w-3/4"></div>
+                <div class="h-4 bg-gray-200 rounded shimmer"></div>
+                <div class="h-4 bg-gray-200 rounded shimmer w-5/6"></div>
+            </div>
+            <div id="analyze-content" class="flex-1 overflow-y-auto p-6 space-y-6 hidden">
+                </div>
+        </div>
+    </div>
+
     <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
         <div class="modal-content p-6 bg-white">
             <h3 id="modal-title" class="text-lg font-bold leading-6 text-gray-900">Clear All Habits?</h3>
@@ -223,7 +272,6 @@
             "Wash dishes", "Watch TV", "Weigh myself"
         ];
 
-        // NEW: Dictionary for simple verb normalization
         const VERB_MAP = {
             'woke': 'wake', 'drank': 'drink', 'ate': 'eat', 'went': 'go',
             'did': 'do', 'took': 'take', 'bought': 'buy', 'read': 'read',
@@ -241,13 +289,18 @@
         const clearAllHabitsButton = document.getElementById('clear-all-habits-button');
         const manageHabitsBtn = document.getElementById('manage-habits-btn');
         const voiceLogBtn = document.getElementById('voice-log-btn');
+        const analyzeBtn = document.getElementById('analyze-btn');
 
         // Modals
         const confirmModal = document.getElementById('confirm-modal');
         const manageModal = document.getElementById('manage-modal');
         const voiceModal = document.getElementById('voice-modal');
+        const analyzeModal = document.getElementById('analyze-modal');
         
         const closeManageModalBtn = document.getElementById('close-manage-modal');
+        const closeAnalyzeModalBtn = document.getElementById('close-analyze-modal');
+        const analyzeContentEl = document.getElementById('analyze-content');
+        const analyzeLoadingEl = document.getElementById('analyze-loading');
         const manageListEl = document.getElementById('manage-list');
         const manageAddForm = document.getElementById('manage-add-form');
         const manageAddInput = document.getElementById('manage-add-input');
@@ -279,17 +332,177 @@
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
 
+        // --- Analysis Functions ---
+
+        function showAnalysisModal() {
+            analyzeModal.classList.remove('hidden');
+            analyzeContentEl.classList.add('hidden');
+            analyzeLoadingEl.classList.remove('hidden');
+
+            // Simulate AI network delay
+            setTimeout(() => {
+                generateSmartAnalysis();
+                analyzeLoadingEl.classList.add('hidden');
+                analyzeContentEl.classList.remove('hidden');
+            }, 1500); 
+        }
+
+        function generateSmartAnalysis() {
+             if (habits.length === 0) {
+                analyzeContentEl.innerHTML = '<p class="text-center text-gray-500 py-8">Log some habits to see an analysis here.</p>';
+                return;
+            }
+
+            let pos = 0, neg = 0, neu = 0, none = 0;
+            const timeOfDayStats = { Morning: { total: 0, neg: 0 }, Afternoon: { total: 0, neg: 0 }, Evening: { total: 0, neg: 0 }, Night: { total: 0, neg: 0 } };
+            const habitCounts = {};
+            const themes = { 'Digital': 0, 'Health': 0, 'Chore': 0, 'Social': 0 };
+
+            habits.forEach(h => {
+                if (h.label === 'positive') pos++;
+                else if (h.label === 'negative') neg++;
+                else if (h.label === 'neutral') neu++;
+                else none++;
+
+                habitCounts[h.text] = (habitCounts[h.text] || 0) + 1;
+
+                const hour = parseInt(h.displayTime.split(':')[0]);
+                let timeBlock = 'Night';
+                if (hour >= 5 && hour < 12) timeBlock = 'Morning';
+                else if (hour >= 12 && hour < 17) timeBlock = 'Afternoon';
+                else if (hour >= 17 && hour < 21) timeBlock = 'Evening';
+                
+                timeOfDayStats[timeBlock].total++;
+                if (h.label === 'negative') timeOfDayStats[timeBlock].neg++;
+
+                // Simple theme detection
+                const lowerText = h.text.toLowerCase();
+                if (lowerText.match(/phone|email|tv|social|scroll|watch/)) themes['Digital']++;
+                if (lowerText.match(/water|eat|exercise|workout|walk|stretch|teeth|floss|shower/)) themes['Health']++;
+                if (lowerText.match(/laundry|dishes|tidy|bed|cook/)) themes['Chore']++;
+                if (lowerText.match(/call|meet/)) themes['Social']++;
+            });
+
+            const total = habits.length;
+            const netScore = pos - neg;
+            
+            // --- Generate "AI" Insights ---
+            let insightsHTML = '';
+            
+            // Insight 1: Overall Sentiment
+            let sentiment = "";
+            if (total < 5) sentiment = "You're just getting started. Keep logging to reveal deeper patterns.";
+            else if (netScore > (total * 0.3)) sentiment = "You're building strong positive momentum! Your good habits are significantly outweighing the rest.";
+            else if (neg > pos) sentiment = "Your environment might be triggering too many negative loops right now. Focus on one small win tomorrow.";
+            else sentiment = "You have a balanced scorecard. Awareness is the first step to tilting the scales.";
+            insightsHTML += `<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm leading-relaxed"><strong>🤖 Insight:</strong> ${sentiment}</div>`;
+
+            // Insight 2: Time-based patterns (if enough data)
+            if (total >= 5) {
+                 let worstTimeBlock = null;
+                 let maxNegRatio = 0;
+                 for (const [block, stats] of Object.entries(timeOfDayStats)) {
+                     if (stats.total > 2) {
+                         const ratio = stats.neg / stats.total;
+                         if (ratio > maxNegRatio) {
+                             maxNegRatio = ratio;
+                             worstTimeBlock = block;
+                         }
+                     }
+                 }
+                 if (worstTimeBlock && maxNegRatio > 0.3) {
+                      insightsHTML += `<div class="bg-orange-50 p-4 rounded-lg border border-orange-100 text-orange-900 text-sm leading-relaxed mt-3"><strong>⚠️ Pattern Detected:</strong> You tend to struggle more during the <strong>${worstTimeBlock}</strong>. Consider designing your environment during this time to make good habits easier and bad habits harder.</div>`;
+                 }
+            }
+
+            // Insight 3: Unlabeled Warning
+            if (none > (total * 0.5)) {
+                 insightsHTML += `<div class="bg-gray-100 p-4 rounded-lg border border-gray-200 text-gray-700 text-sm leading-relaxed mt-3"><strong>💡 Tip:</strong> Over half your habits are unlabeled. Go back and mark them as (+) or (-) to get a true net score.</div>`;
+            }
+
+            // --- Render Standard Stats ---
+            const sortedHabits = Object.entries(habitCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const maxTimeVal = Math.max(...Object.values(timeOfDayStats).map(s => s.total));
+            const getPct = (val) => total > 0 ? ((val / total) * 100).toFixed(0) : 0;
+
+            analyzeContentEl.innerHTML = `
+                ${insightsHTML}
+
+                <hr class="border-gray-200 my-6">
+
+                <div class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Net Score</p>
+                         <p class="text-xs text-gray-400">(Positives - Negatives)</p>
+                    </div>
+                    <div class="text-4xl font-bold ${netScore > 0 ? 'text-green-600' : (netScore < 0 ? 'text-red-600' : 'text-gray-900')}">
+                        ${netScore > 0 ? '+' : ''}${netScore}
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                     <h4 class="text-base font-bold text-gray-900 mb-3">Habit Breakdown</h4>
+                     <div class="space-y-3">
+                        <div class="flex items-center">
+                             <div class="w-24 text-sm font-medium text-gray-900">Positive (+)</div>
+                             <div class="flex-1 bg-gray-100 rounded-full h-2.5 mx-3"><div class="bg-[#111827] h-2.5 rounded-full" style="width: ${getPct(pos)}%"></div></div>
+                             <div class="w-12 text-sm text-gray-500 text-right">${pos}</div>
+                        </div>
+                         <div class="flex items-center">
+                             <div class="w-24 text-sm font-medium text-gray-900">Negative (-)</div>
+                             <div class="flex-1 bg-gray-100 rounded-full h-2.5 mx-3"><div class="bg-gray-400 h-2.5 rounded-full" style="width: ${getPct(neg)}%"></div></div>
+                             <div class="w-12 text-sm text-gray-500 text-right">${neg}</div>
+                        </div>
+                         <div class="flex items-center">
+                             <div class="w-24 text-sm font-medium text-gray-500">Neutral (=)</div>
+                             <div class="flex-1 bg-gray-100 rounded-full h-2.5 mx-3"><div class="bg-gray-300 h-2.5 rounded-full" style="width: ${getPct(neu)}%"></div></div>
+                             <div class="w-12 text-sm text-gray-500 text-right">${neu}</div>
+                        </div>
+                     </div>
+                </div>
+
+                 <div class="mt-8">
+                     <h4 class="text-base font-bold text-gray-900 mb-4">Activity by Time of Day</h4>
+                     <div class="grid grid-cols-4 gap-3 h-24 items-end">
+                        ${Object.entries(timeOfDayStats).map(([label, stats]) => {
+                            const height = maxTimeVal > 0 ? (stats.total / maxTimeVal) * 100 : 0;
+                            return `
+                                <div class="flex flex-col items-center">
+                                    <div class="w-full bg-indigo-100 rounded-t-sm relative" style="height: ${Math.max(height, 2)}%">
+                                         <div class="absolute bottom-0 left-0 right-0 bg-[#111827] opacity-80 rounded-t-sm transition-all duration-500" style="height: ${stats.total > 0 ? (1 - (stats.neg/stats.total))*100 : 0}%"></div>
+                                    </div>
+                                    <span class="text-[10px] uppercase font-medium text-gray-500 mt-2">${label.slice(0,4)}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                     </div>
+                     <p class="text-xs text-center text-gray-400 mt-2">Darker area = Non-negative habits</p>
+                </div>
+
+                <div class="mt-8">
+                     <h4 class="text-base font-bold text-gray-900 mb-2">Top Logged Habits</h4>
+                     <ul class="divide-y divide-gray-100">
+                        ${sortedHabits.map(([name, count], i) => `
+                            <li class="py-2 flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <span class="text-xs font-bold text-gray-400 w-5">${i+1}.</span>
+                                    <span class="text-sm text-gray-900 truncate">${name}</span>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${count}</span>
+                            </li>
+                        `).join('')}
+                     </ul>
+                </div>
+            `;
+        }
+
         // --- Smart Matching Logic ---
 
         function normalizeText(text) {
             return text.toLowerCase()
-                // Remove punctuation
                 .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
-                // Split into words
                 .split(/\s+/)
-                // Map verbs to present tense
                 .map(word => VERB_MAP[word] || word)
-                // Remove common filler words for better matching
                 .filter(word => !['a', 'an', 'the', 'my', 'some'].includes(word))
                 .join(' ');
         }
@@ -305,16 +518,11 @@
                 const normalizedHabit = normalizeText(habit);
                 const habitTokens = new Set(normalizedHabit.split(' '));
                 
-                // Calculate overlap score (Jaccard index-ish)
                 let intersection = 0;
                 for (const token of spokenTokens) {
-                    if (habitTokens.has(token)) {
-                        intersection++;
-                    }
+                    if (habitTokens.has(token)) intersection++;
                 }
                 
-                // Score based on how much of the LIST item is covered by spoken words
-                // This helps "ate fruit" match "Eat a fruit / vegetable"
                 const score = intersection / habitTokens.size;
 
                 if (score > bestScore) {
@@ -323,8 +531,6 @@
                 }
             }
 
-            // Threshold: needs at least 50% of key tokens to match to be considered "good enough"
-            // For 2-word habits like "Wake up", matching both is 100%, matching one is 50%.
             return bestScore >= 0.5 ? bestMatch : null;
         }
 
@@ -390,21 +596,18 @@
                 timeValue = parseSpokenTime(timeStr);
             }
 
-            // 1. Try exact match first
             const exactMatch = habitList.find(h => h.toLowerCase() === habitNameRaw);
             if (exactMatch) {
                 logHabit(exactMatch, timeValue);
                 return;
             }
 
-            // 2. Try smart match
             const smartMatch = findBestMatch(habitNameRaw);
             if (smartMatch) {
                 logHabit(smartMatch, timeValue);
                 return;
             }
 
-            // 3. No good match: Ask user
             const formattedName = capitalizeFirstLetter(habitNameRaw);
             pendingVoiceHabit = { name: formattedName, time: timeValue };
             voiceHabitNameEl.textContent = formattedName;
@@ -576,90 +779,6 @@
             }
         }
 
-        // --- Habit Rendering & Storage ---
-
-        function renderHabits() {
-            habitListContainer.innerHTML = ''; 
-            if (habits.length === 0) {
-                habitListContainer.innerHTML = `<div class="p-8 text-center text-gray-500">No habits logged yet. Select one or use voice to start.</div>`;
-                clearAllHabitsButton.style.display = 'none';
-                return;
-            }
-            clearAllHabitsButton.style.display = 'inline-block';
-            habits.sort((a, b) => b.createdAt - a.createdAt); 
-
-            habits.forEach(habit => {
-                const habitEl = document.createElement('div');
-                habitEl.className = 'p-4 flex items-center justify-between space-x-4';
-                const habitDate = new Date(habit.createdAt);
-                const displayDate = habitDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const displayDateTime = `${displayDate} at ${habit.displayTime}`;
-
-                habitEl.innerHTML = `
-                    <div class="flex-1 min-w-0">
-                        <p class="text-lg font-medium text-gray-900">${habit.text}</p>
-                        <p class="text-sm text-gray-500">${displayDateTime}</p> 
-                    </div>
-                    <div class="flex-shrink-0 flex items-center space-x-3">
-                        <button data-id="${habit.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${habit.label === 'positive' ? 'label-positive' : 'label-none'}">
-                            +
-                        </button>
-                        <button data-id="${habit.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${habit.label === 'negative' ? 'label-negative' : 'label-none'}">
-                            &minus;
-                        </button>
-                        <button data-id="${habit.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${habit.label === 'neutral' ? 'label-neutral' : 'label-none'}">
-                            =
-                        </button>
-                        <button data-id="${habit.id}" data-action="delete-habit" title="Delete habit" class="ml-3 text-gray-400 hover:text-red-600 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                    </div>
-                `;
-                habitListContainer.appendChild(habitEl);
-            });
-        }
-
-        function saveHabits() {
-            localStorage.setItem(HABIT_STORAGE_KEY, JSON.stringify(habits));
-        }
-
-        function loadHabits() {
-            habits = JSON.parse(localStorage.getItem(HABIT_STORAGE_KEY)) || [];
-        }
-
-        function addHabitFromForm(e) {
-            e.preventDefault();
-            const habitText = habitSelect.value;
-            const habitTime = habitTimeInput.value;
-            if (habitText && habitTime) {
-                logHabit(habitText, habitTime);
-            }
-        }
-
-        function updateLabel(docId, newLabel) {
-            const habit = habits.find(h => h.id === docId);
-            if (habit) {
-                habit.label = habit.label === newLabel ? 'none' : newLabel;
-                saveHabits();
-                renderHabits();
-            }
-        }
-
-        function deleteHabit(docId) {
-            habits = habits.filter(h => h.id !== docId);
-            saveHabits();
-            renderHabits();
-        }
-
-        function clearAllHabits() {
-            habits = [];
-            saveHabits(); 
-            renderHabits(); 
-            document.getElementById('confirm-modal').classList.add('hidden');
-        }
-
         // --- Initialization ---
 
         function initialize() {
@@ -738,6 +857,10 @@
             voiceCancelBtn.addEventListener('click', () => {
                 voiceModal.classList.add('hidden');
             });
+
+            // Analyze Modal Actions
+            analyzeBtn.addEventListener('click', showAnalysisModal);
+            closeAnalyzeModalBtn.addEventListener('click', () => analyzeModal.classList.add('hidden'));
 
             // Auto-update triggers
             document.addEventListener('visibilitychange', () => { if (!document.hidden) updateTimeInput(); });
