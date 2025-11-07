@@ -176,6 +176,28 @@
         </div>
     </div>
 
+    <div id="voice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content p-6 bg-white">
+            <h3 class="text-lg font-bold leading-6 text-gray-900">Unknown Habit</h3>
+            <div class="mt-2">
+                <p class="text-base text-gray-500">
+                    I heard "<span id="voice-habit-name" class="font-medium text-gray-900"></span>". This isn't in your list yet.
+                </p>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row-reverse gap-2 sm:gap-3">
+                <button id="voice-add-log-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-black text-base font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black sm:text-sm">
+                    Add to List & Log
+                </button>
+                <button id="voice-log-only-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black sm:text-sm">
+                    Log Only
+                </button>
+                 <button id="voice-cancel-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-700 focus:outline-none sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         // --- App State ---
         let habits = [];
@@ -185,6 +207,8 @@
         let isTimeManuallyEdited = false; 
         let recognition = null;
         let isRecording = false;
+        // Temporary storage for voice confirmation
+        let pendingVoiceHabit = { name: null, time: null };
 
         const DEFAULT_HABITS = [
             "Attend meeting", "Bite nails", "Brush teeth", "Buy something unnecessary",
@@ -204,7 +228,7 @@
         const habitForm = document.getElementById('add-habit-form');
         const habitSelect = document.getElementById('habit-select');
         const habitTimeInput = document.getElementById('habit-time-input');
-        const habitTimeInputMobile = document.getElementById('habit-time-input-mobile'); // Sync these two
+        const habitTimeInputMobile = document.getElementById('habit-time-input-mobile');
         const habitListContainer = document.getElementById('habit-list-container');
         const clearAllHabitsButton = document.getElementById('clear-all-habits-button');
         const manageHabitsBtn = document.getElementById('manage-habits-btn');
@@ -213,11 +237,19 @@
         // Modals
         const confirmModal = document.getElementById('confirm-modal');
         const manageModal = document.getElementById('manage-modal');
+        const voiceModal = document.getElementById('voice-modal');
+        
         const closeManageModalBtn = document.getElementById('close-manage-modal');
         const manageListEl = document.getElementById('manage-list');
         const manageAddForm = document.getElementById('manage-add-form');
         const manageAddInput = document.getElementById('manage-add-input');
         const resetDefaultsBtn = document.getElementById('reset-defaults-button');
+        
+        const voiceHabitNameEl = document.getElementById('voice-habit-name');
+        const voiceAddLogBtn = document.getElementById('voice-add-log-btn');
+        const voiceLogOnlyBtn = document.getElementById('voice-log-only-btn');
+        const voiceCancelBtn = document.getElementById('voice-cancel-btn');
+
 
         // --- Core Functions ---
 
@@ -244,8 +276,7 @@
         function initVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                voiceLogBtn.style.display = 'none'; // Hide if not supported
-                console.warn("Speech Recognition not supported in this browser.");
+                voiceLogBtn.style.display = 'none'; 
                 return;
             }
 
@@ -275,7 +306,6 @@
                 console.error('Speech recognition error', event.error);
                 isRecording = false;
                 voiceLogBtn.classList.remove('recording');
-                alert("Voice recognition error: " + event.error);
             };
 
             voiceLogBtn.addEventListener('click', () => {
@@ -288,32 +318,33 @@
         }
 
         function parseAndLogVoiceCommand(text) {
-            // Normalize
             let cleanText = text.toLowerCase().trim();
-            
-            // Remove common starter phrases
             cleanText = cleanText.replace(/^(please )?(log |add |track )?(that )?(i )?/, '');
 
-            // Default to now
             let timeValue = getFormattedTime(new Date());
-            let habitName = cleanText;
+            let habitNameRaw = cleanText;
 
-            // Detect "at [TIME]" pattern
-            // Matches: " at 5", " at 5:30", " at 5pm", " at 5:30 pm", " at 1700"
             const timeRegex = / at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i;
             const timeMatch = cleanText.match(timeRegex);
 
             if (timeMatch) {
                 const timeStr = timeMatch[1];
-                habitName = cleanText.replace(timeRegex, '').trim();
+                habitNameRaw = cleanText.replace(timeRegex, '').trim();
                 timeValue = parseSpokenTime(timeStr);
             }
 
-            habitName = capitalizeFirstLetter(habitName);
+            // Try to find EXACT match in list (ignoring case)
+            const matchedHabit = habitList.find(h => h.toLowerCase() === habitNameRaw);
 
-            if (habitName) {
-                // Directly add the habit, bypassing the form/select 
-                logHabit(habitName, timeValue);
+            if (matchedHabit) {
+                // Match found: Log it immediately
+                logHabit(matchedHabit, timeValue);
+            } else {
+                // No match: Ask user what to do
+                const formattedName = capitalizeFirstLetter(habitNameRaw);
+                pendingVoiceHabit = { name: formattedName, time: timeValue };
+                voiceHabitNameEl.textContent = formattedName;
+                voiceModal.classList.remove('hidden');
             }
         }
 
@@ -325,7 +356,6 @@
                 let cleanStr = timeStr.toLowerCase().replace(/(am|pm)/g, '').trim();
 
                 if (cleanStr.length === 4 && !cleanStr.includes(':')) {
-                     // Military: 0700
                     hours = parseInt(cleanStr.substring(0, 2));
                     minutes = parseInt(cleanStr.substring(2, 4));
                 } else if (cleanStr.includes(':')) {
@@ -341,7 +371,6 @@
 
                 return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
             } catch (e) {
-                console.warn("Failed to parse spoken time, using current time.", e);
                 return getFormattedTime(new Date());
             }
         }
@@ -364,7 +393,6 @@
             saveHabits();
             renderHabits();
             
-            // Reset UI states
             habitSelect.value = "";
             isTimeManuallyEdited = false; 
             updateTimeInput(); 
@@ -580,8 +608,6 @@
 
             // --- Event Listeners ---
             habitForm.addEventListener('submit', addHabitFromForm);
-            
-            // Sync the two time inputs (mobile vs desktop view)
             habitTimeInput.addEventListener('input', (e) => { 
                 isTimeManuallyEdited = true; 
                 habitTimeInputMobile.value = e.target.value;
@@ -590,7 +616,6 @@
                  isTimeManuallyEdited = true;
                  habitTimeInput.value = e.target.value;
             });
-
             habitSelect.addEventListener('change', () => {
                  isTimeManuallyEdited = false;
                  updateTimeInput();
@@ -629,6 +654,26 @@
                     saveHabitList();
                     renderManageList();
                 }
+            });
+
+            // Voice Modal Actions
+            voiceAddLogBtn.addEventListener('click', () => {
+                if (pendingVoiceHabit.name) {
+                    habitList.push(pendingVoiceHabit.name);
+                    sortHabitList();
+                    saveHabitList();
+                    logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time);
+                }
+                voiceModal.classList.add('hidden');
+            });
+            voiceLogOnlyBtn.addEventListener('click', () => {
+                if (pendingVoiceHabit.name) {
+                    logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time);
+                }
+                voiceModal.classList.add('hidden');
+            });
+            voiceCancelBtn.addEventListener('click', () => {
+                voiceModal.classList.add('hidden');
             });
 
             // Auto-update triggers
