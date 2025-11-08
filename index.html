@@ -22,8 +22,6 @@
         .modal-content { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 90%; width: 400px; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .recording { animation: pulse-red 1.5s infinite; color: #ef4444 !important; border-color: #ef4444 !important; }
-        .shimmer { animation: shimmer 2s linear infinite forwards; background: #f6f7f8; background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%); background-size: 1200px 100%; }
-        @keyframes shimmer { 0% { background-position: -1200px 0; } 100% { background-position: 1200px 0; } }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 h-full flex flex-col">
@@ -31,7 +29,7 @@
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div><h1 class="text-xl sm:text-2xl font-bold text-gray-900">Habit Scorecard</h1><p class="text-xs sm:text-sm text-gray-500">Atomic Habits Tracker</p></div>
             <div class="flex space-x-2">
-                <button id="settings-btn" class="p-2 text-gray-400 hover:text-gray-900 transition-colors" title="Settings"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button>
+                <button id="manage-habits-btn" class="p-2 text-gray-400 hover:text-gray-900 transition-colors" title="Manage List"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button>
                 <button id="analyze-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Analyze</button>
             </div>
         </div>
@@ -39,9 +37,15 @@
     <main class="flex-1 overflow-y-auto py-6 sm:py-8">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div id="view-scorecard">
-                <form id="add-habit-form" class="flex items-center space-x-2 mb-4 sm:mb-6">
-                    <div class="flex-1 flex items-center space-x-2">
-                        <select id="habit-select" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required><option value="" disabled selected>Select a habit...</option></select>
+                <form id="add-habit-form" class="flex flex-wrap items-center gap-2 mb-4 sm:mb-6">
+                    <select id="habit-select" class="flex-1 min-w-[200px] block rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required><option value="" disabled selected>Select a habit...</option></select>
+                    <div class="flex space-x-1">
+                        <input type="number" id="habit-qty" placeholder="#" class="w-16 block rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" min="0" step="0.1">
+                        <select id="habit-unit" class="block w-20 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3">
+                            <option value="">--</option>
+                            <optgroup label="Time"><option value="min">min</option><option value="hr">hr</option></optgroup>
+                            <optgroup label="Volume"><option value="oz">oz</option><option value="L">L</option><option value="cup">cup</option></optgroup>
+                        </select>
                     </div>
                     <input type="time" id="habit-time-input" class="hidden sm:block w-32 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3" required>
                     <button type="button" id="voice-log-btn" class="inline-flex items-center justify-center p-3 border border-gray-300 text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black transition-all" title="Voice Log"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg></button>
@@ -53,115 +57,158 @@
             </div>
         </div>
     </main>
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Settings</h3><button id="close-settings-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div class="space-y-6"><div><label class="block text-sm font-medium text-gray-700">Google Gemini API Key (Free)</label><p class="text-xs text-gray-500 mb-2">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 hover:underline">Google AI Studio</a>.</p><input type="password" id="api-key-input" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" placeholder="Paste key here..."></div><hr><h4 class="font-medium text-gray-900">Manage Habits</h4><div class="flex space-x-2"><input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2"><button id="manage-add-btn" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button></div><div class="h-48 overflow-y-auto border rounded-md p-2"><ul id="manage-list" class="divide-y divide-gray-100"></ul></div><div class="text-center"><button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset Habits to Default</button></div></div><div class="mt-6"><button id="save-settings-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-base font-medium text-white hover:bg-gray-800 sm:text-sm">Save Settings</button></div></div></div>
-    <div id="analyze-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50"><div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10"><h3 class="text-lg font-bold flex items-center text-indigo-900"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Smart Analysis</h3><button id="close-analyze-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div id="analyze-loading" class="hidden p-8 space-y-4"><p id="analyze-status-text" class="text-center text-sm text-indigo-600 font-medium mb-4">Clarke is thinking...</p><div class="h-4 rounded shimmer w-3/4"></div><div class="h-4 rounded shimmer"></div><div class="h-4 rounded shimmer w-5/6"></div></div><div id="analyze-content" class="flex-1 overflow-y-auto p-6 space-y-6 hidden"></div></div></div>
+    <div id="manage-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[80vh]"><div class="p-4 border-b border-gray-200 flex justify-between items-center"><h3 class="text-lg font-bold">Manage List</h3><button id="close-manage-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div class="p-4 border-b bg-gray-50"><form id="manage-add-form" class="flex space-x-2"><input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" required><button type="submit" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button></form></div><div class="flex-1 overflow-y-auto p-2"><ul id="manage-list" class="divide-y divide-gray-100"></ul></div><div class="p-4 border-t text-center bg-gray-50"><button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset to Defaults</button></div></div></div>
+    <div id="analyze-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50"><div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10"><h3 class="text-lg font-bold flex items-center text-indigo-900"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Analysis</h3><button id="close-analyze-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div id="analyze-content" class="flex-1 overflow-y-auto p-6 space-y-6"></div></div></div>
     <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Clear All?</h3><p class="mt-2 text-gray-500">This action cannot be undone.</p><div class="mt-6 grid grid-cols-2 gap-3"><button id="confirm-delete-button" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-base font-medium text-white hover:bg-gray-800 sm:text-sm">Yes, Delete</button><button id="cancel-delete-button" class="w-full inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:text-sm">Cancel</button></div></div></div>
     <div id="voice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Unknown Habit</h3><p class="mt-2 text-gray-500">I heard "<span id="voice-habit-name" class="font-medium text-gray-900"></span>". Not in your list yet.</p><div class="mt-6 flex flex-col sm:flex-row-reverse gap-2"><button id="voice-add-log-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-white sm:text-sm">Add to List & Log</button><button id="voice-log-only-btn" class="w-full inline-flex justify-center rounded-md border border-gray-300 bg-white text-gray-700 sm:text-sm">Log Only</button><button id="voice-cancel-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-gray-500 sm:text-sm">Cancel</button></div></div></div>
 
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
-            const AI_NAME="Clarke";
-            let habits=[],habitList=[],isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null,qty:null,unit:null},apiKey=null,clarkeVoice=null;
-            const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list', API_KEY='habitScorecard.apiKey';
+            let habits=[],habitList=[],isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null,qty:null,unit:null};
+            const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list';
             const DEFAULT_HABITS=["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
-            const VERB_MAP={'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check'};
-            const CONCEPT_MAP={'social':['call','talk','spoke','chat','text','message','meet','hang','friend','family'],'exercise':['run','jog','walk','hike','lift','gym','workout','fitness'],'clean':['tidy','clean','wash','organize','laundry','dishes'],'consume':['eat','ate','drink','drank','coffee','tea','water']};
+            
+            // --- SEMANTIC ENGINE CONFIG ---
+            const VERB_MAP={'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check','hit':'exercise'};
+            // Expanded Concept Map for Robust Matching & Analysis
+            const CONCEPT_MAP={
+                'exercise':['run','jog','walk','hike','lift','gym','workout','fitness','train','stretch','yoga','exercise','sport'],
+                'reading':['read','book','article','study','chapter','page'],
+                'meditation':['meditate','mindfulness','breathing','breath','zen'],
+                'chores':['tidy','clean','wash','organize','declutter','fold','laundry','dishes','yard','mow','grass','weed','house','cook','vacuum','sweep'],
+                'hydration':['water','drink','drank','hydrate','bottle','glass'],
+                'social':['call','talk','spoke','chat','text','message','meet','hang','friend','family','mom','dad']
+            };
+            const KEYWORD_BOOST = new Set([...CONCEPT_MAP.exercise, ...CONCEPT_MAP.reading, ...CONCEPT_MAP.meditation, ...CONCEPT_MAP.chores, ...CONCEPT_MAP.hydration]);
 
             const $=(id)=>document.getElementById(id);
-            const els={habitForm:$('add-habit-form'),habitSelect:$('habit-select'),timeInput:$('habit-time-input'),timeInputMobile:$('habit-time-input-mobile'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),settingsBtn:$('settings-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),modals:{confirm:$('confirm-modal'),settings:$('settings-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},settings:{close:$('close-settings-modal'),keyInput:$('api-key-input'),save:$('save-settings-btn'),list:$('manage-list'),addBtn:$('manage-add-btn'),addInput:$('manage-add-input'),reset:$('reset-defaults-button')},voice:{name:$('voice-habit-name'),add:$('voice-add-log-btn'),log:$('voice-log-only-btn'),cancel:$('voice-cancel-btn')},analyze:{close:$('close-analyze-modal'),content:$('analyze-content'),loading:$('analyze-loading'),status:$('analyze-status-text')},confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')}};
+            const els={habitForm:$('add-habit-form'),habitSelect:$('habit-select'),habitQty:$('habit-qty'),habitUnit:$('habit-unit'),timeInput:$('habit-time-input'),timeInputMobile:$('habit-time-input-mobile'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),manageBtn:$('manage-habits-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),modals:{confirm:$('confirm-modal'),manage:$('manage-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},manage:{close:$('close-manage-modal'),list:$('manage-list'),form:$('manage-add-form'),input:$('manage-add-input'),reset:$('reset-defaults-button')},voice:{name:$('voice-habit-name'),add:$('voice-add-log-btn'),log:$('voice-log-only-btn'),cancel:$('voice-cancel-btn')},analyze:{close:$('close-analyze-modal'),content:$('analyze-content')},confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')}};
 
             const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             const updateTimeInput=(force=null)=>{const t=force||getFormattedTime(new Date());if(!isTimeManuallyEdited||force){els.timeInput.value=t;els.timeInputMobile.value=t;}};
             const capitalize=(s)=>s.charAt(0).toUpperCase()+s.slice(1);
 
-            function initTTS(){const v=window.speechSynthesis.getVoices();clarkeVoice=v.find(i=>i.name.includes('Female')||i.name.includes('Samantha')||i.name.includes('Zira')||i.name.includes('Google US English'))||v[0];}
-            if(window.speechSynthesis){window.speechSynthesis.onvoiceschanged=initTTS;}
-            function speak(t){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);if(clarkeVoice)u.voice=clarkeVoice;u.rate=1;u.pitch=1;window.speechSynthesis.speak(u);}
-
-            async function callGemini(prompt) {
-                if(!apiKey) throw new Error("No API Key");
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                if(!r.ok) throw new Error("API Error");
-                const d = await r.json();
-                return d.candidates[0].content.parts[0].text;
-            }
-
-            async function findBestMatch(spoken) {
-                const exact=habitList.find(h=>h.toLowerCase()===spoken.toLowerCase());if(exact)return {name:exact};
-                if(apiKey){
-                    try{
-                        els.voiceBtn.classList.add('recording');
-                        const prompt=`Extract habit from: "${spoken}".\nList: ${JSON.stringify(habitList)}\nReturn JSON only: {"match": "EXACT_LIST_STRING_OR_null", "qty": NUMBER_OR_null, "unit": "STRING_OR_null", "time": "HH:MM_OR_null"}`;
-                        const txt=await callGemini(prompt);
-                        els.voiceBtn.classList.remove('recording');
-                        const jsonMatch=txt.match(/\{[\s\S]*\}/);
-                        if(jsonMatch){
-                            const data=JSON.parse(jsonMatch[0]);
-                            if(data.match && habitList.includes(data.match)) return {name:data.match, qty:data.qty, unit:data.unit, time:data.time};
+            // --- SEMANTIC MATCHING ENGINE ---
+            function findBestMatch(spoken) {
+                const exact = habitList.find(h => h.toLowerCase() === spoken.toLowerCase()); if(exact) return exact;
+                let bestMatch = null, maxScore = 0;
+                // Normalize text: remove punctuation, map verbs to present tense
+                const normalize = (t) => t.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/).map(w=>VERB_MAP[w]||w).filter(w=>!['a','an','the','my','some'].includes(w)).join(' ');
+                // Expand text with related concepts
+                const expand = (t) => { let e=normalize(t); for(const[c,ws]of Object.entries(CONCEPT_MAP))if(ws.some(w=>e.includes(w)))e+=' '+c; return e; };
+                const spokenTokens = new Set(expand(spoken).split(' '));
+                habitList.forEach(h => {
+                    const hTokens = new Set(expand(h).split(' '));
+                    let score = 0;
+                    spokenTokens.forEach(t => {
+                        if(hTokens.has(t)) {
+                            score += 1;
+                            if(KEYWORD_BOOST.has(t)) score += 2; // Boost key category words
                         }
-                    }catch(e){console.warn("AI Match failed",e);els.voiceBtn.classList.remove('recording');}
-                }
-                // Fallback
-                let best=null,max=0; const norm=(t)=>t.toLowerCase().replace(/[^\w\s]/g,"").split(/\s+/).map(w=>VERB_MAP[w]||w).filter(w=>!['a','an','the'].includes(w)).join(' ');
-                const expand=(t)=>{let e=norm(t);for(const[c,ws]of Object.entries(CONCEPT_MAP))if(ws.some(w=>e.includes(w)))e+=' '+c;return e;};
-                const sTok=new Set(expand(spoken).split(' '));
-                habitList.forEach(h=>{const hTok=new Set(expand(h).split(' '));let s=0;sTok.forEach(t=>{if(hTok.has(t))s+=(CONCEPT_MAP[t]?0.5:1);});const f=s/(hTok.size+sTok.size)*10;if(f>max){max=f;best=h;}});
-                return max>1.2?{name:best}:null;
+                    });
+                    // Score favoring concise, high-overlap matches
+                    const finalScore = score / (hTokens.size + spokenTokens.size) * 10;
+                    if(finalScore > maxScore) { maxScore = finalScore; bestMatch = h; }
+                });
+                return maxScore > 1.5 ? bestMatch : null;
             }
 
-            function loadData(){habitList=JSON.parse(localStorage.getItem(LIST_KEY))||[...DEFAULT_HABITS];habitList.sort((a,b)=>a.localeCompare(b));habits=JSON.parse(localStorage.getItem(HABIT_KEY))||[];apiKey=localStorage.getItem(API_KEY);renderSelect();renderHabits();}
-            function saveData(){localStorage.setItem(LIST_KEY,JSON.stringify(habitList));localStorage.setItem(HABIT_KEY,JSON.stringify(habits));if(apiKey)localStorage.setItem(API_KEY,apiKey);}
-            function logHabit(text,timeStr,quantity=null,unit=null){habits.push({id:crypto.randomUUID(),text,label:'none',createdAt:new Date().getTime(),displayTime:timeStr,quantity,unit});saveData();renderHabits();els.habitSelect.value="";isTimeManuallyEdited=false;updateTimeInput();}
+            // --- CORE LOGIC ---
+            function loadData(){habitList=JSON.parse(localStorage.getItem(LIST_KEY))||[...DEFAULT_HABITS];habitList.sort((a,b)=>a.localeCompare(b));habits=JSON.parse(localStorage.getItem(HABIT_KEY))||[];renderSelect();renderHabits();}
+            function saveData(){localStorage.setItem(LIST_KEY,JSON.stringify(habitList));localStorage.setItem(HABIT_KEY,JSON.stringify(habits));}
+            function logHabit(text,timeStr,qty=null,unit=null){
+                // Auto-convert hours to minutes for consistency
+                if(unit==='hr' || unit==='hour'){ qty=(parseFloat(qty)||0)*60; unit='min'; }
+                habits.push({id:crypto.randomUUID(),text,label:'none',createdAt:new Date().getTime(),displayTime:timeStr,quantity:qty?parseFloat(qty):null,unit});
+                saveData();renderHabits();
+                els.habitSelect.value="";els.habitQty.value="";els.habitUnit.value="";isTimeManuallyEdited=false;updateTimeInput();
+            }
             function renderSelect(){const c=els.habitSelect.value;els.habitSelect.innerHTML='<option value="" disabled selected>Select a habit...</option>'+habitList.map(h=>`<option value="${h}">${h}</option>`).join('');if(habitList.includes(c))els.habitSelect.value=c;}
             function renderHabits(){
                 if(habits.length===0){els.listContainer.innerHTML=`<div class="p-8 text-center text-gray-500">No habits logged yet.</div>`;els.clearBtn.style.display='none';return;}
                 els.clearBtn.style.display='inline-block';habits.sort((a,b)=>b.createdAt-a.createdAt);
-                els.listContainer.innerHTML=habits.map(h=>`<div class="p-4 flex items-center justify-between space-x-4"><div class="flex-1 min-w-0"><p class="text-lg font-medium flex items-center">${h.text}${h.quantity?`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">💧 ${h.quantity} ${h.unit}</span>`:''}</p><p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p></div><div class="flex-shrink-0 flex items-center space-x-2"><button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button><button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button><button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button><button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`).join('');
+                els.listContainer.innerHTML=habits.map(h=>{
+                    let badge=''; if(h.quantity){
+                        if(['min','hr'].includes(h.unit)) badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">⏱️ ${h.quantity}m</span>`;
+                        else badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">💧 ${h.quantity} ${h.unit}</span>`;
+                    }
+                    return `<div class="p-4 flex items-center justify-between space-x-4"><div class="flex-1 min-w-0"><p class="text-lg font-medium flex items-center flex-wrap">${h.text}${badge}</p><p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p></div><div class="flex-shrink-0 flex items-center space-x-2"><button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button><button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button><button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button><button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`;
+                }).join('');
             }
-            function renderManageList(){els.settings.list.innerHTML=habitList.map((h,i)=>`<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1 truncate">${h}</span><button data-i="${i}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button></li>`).join('');}
+            function renderManageList(){els.manage.list.innerHTML=habitList.map((h,i)=>`<li class="py-3 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1">${h}</span><button data-i="${i}" data-act="del" class="p-1 text-gray-400 hover:text-red-600 opacity-50 group-hover:opacity-100">✕</button></li>`).join('');}
 
-            async function generateAnalysis() {
+            function generateAnalysis() {
                 if(habits.length===0){els.analyze.content.innerHTML='<p class="text-center text-gray-500 py-8">No data yet.</p>';return;}
-                let pos=0,neg=0,neu=0;const times={Morning:{t:0,n:0},Afternoon:{t:0,n:0},Evening:{t:0,n:0},Night:{t:0,n:0}},counts={};
-                habits.forEach(h=>{if(h.label==='positive')pos++;else if(h.label==='negative')neg++;else if(h.label==='neutral')neu++;counts[h.text]=(counts[h.text]||0)+1;const hr=parseInt(h.displayTime.split(':')[0]);let b='Night';if(hr>=5&&hr<12)b='Morning';else if(hr>=12&&hr<17)b='Afternoon';else if(hr>=17&&hr<21)b='Evening';times[b].t++;if(h.label==='negative')times[b].n++;});
-                const net=pos-neg,total=habits.length,maxT=Math.max(...Object.values(times).map(v=>v.t)),getPct=(v)=>total>0?((v/total)*100).toFixed(0):0;
-                const todayStr=new Date().toDateString();
-                const waterToday=habits.filter(h=>new Date(h.createdAt).toDateString()===todayStr && (h.unit==='oz'||h.text.toLowerCase().includes('water'))).reduce((s,h)=>s+(h.quantity||0),0);
-                const waterHtml=waterToday>0?`<div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100"><h4 class="font-bold text-blue-900 mb-2 flex items-center">💧 Today's Water</h4><div class="flex items-end justify-between"><span class="text-3xl font-bold text-blue-600">${waterToday} <span class="text-lg text-blue-400">oz</span></span><span class="text-sm text-blue-500">Target: 64 oz</span></div><div class="w-full bg-blue-200 rounded-full h-2.5 mt-2"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${Math.min((waterToday/64)*100,100)}%"></div></div></div>`:'';
+                let pos=0,neg=0,neu=0;const times={Morning:{t:0,n:0},Afternoon:{t:0,n:0},Evening:{t:0,n:0},Night:{t:0,n:0}};
+                // Tracking Totals
+                let waterOz=0; const timeTrack={ 'Exercise':0, 'Meditation':0, 'Reading':0, 'Chores':0 };
 
-                let insight="";
-                if(apiKey){
-                    els.analyze.status.textContent=`Asking ${AI_NAME}...`;
-                    try{const p=`Analyze habit data based on "Atomic Habits". Be encouraging but direct. Keep under 3 sentences.\nData: ${JSON.stringify({total,net_score:net,top_habits:Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5),time_blocks:times,water_today_oz:waterToday})}`;insight=await callGemini(p);}catch(e){insight="Please check your API Key in settings.";}
-                } else {insight=total<5?"Keep logging to reveal patterns.":(net>(total*0.3)?"Great positive momentum!":(neg>pos?"Environment might be triggering negative loops.":"Balanced scorecard. Awareness is key."));}
+                habits.forEach(h=>{
+                    if(h.label==='positive')pos++;else if(h.label==='negative')neg++;else if(h.label==='neutral')neu++;
+                    const hr=parseInt(h.displayTime.split(':')[0]);let b='Night';if(hr>=5&&hr<12)b='Morning';else if(hr>=12&&hr<17)b='Afternoon';else if(hr>=17&&hr<21)b='Evening';times[b].t++;if(h.label==='negative')times[b].n++;
+                    
+                    // Semantic Categorization for Totals
+                    const normText = h.text.toLowerCase();
+                    if(h.unit==='oz' || CONCEPT_MAP.hydration.some(w=>normText.includes(w))) waterOz += (h.quantity||0);
+                    
+                    // Time Tracking Categories
+                    if(h.unit==='min') {
+                         if(CONCEPT_MAP.exercise.some(w=>normText.includes(w))) timeTrack['Exercise'] += h.quantity;
+                         else if(CONCEPT_MAP.meditation.some(w=>normText.includes(w))) timeTrack['Meditation'] += h.quantity;
+                         else if(CONCEPT_MAP.reading.some(w=>normText.includes(w))) timeTrack['Reading'] += h.quantity;
+                         else if(CONCEPT_MAP.chores.some(w=>normText.includes(w))) timeTrack['Chores'] += h.quantity;
+                    }
+                });
+
+                const net=pos-neg,total=habits.length,maxT=Math.max(...Object.values(times).map(v=>v.t)),getPct=(v)=>total>0?((v/total)*100).toFixed(0):0;
                 
-                els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm relative"><strong>🤖 ${AI_NAME}:</strong> ${insight}<button id="speak-insight-btn" class="absolute top-4 right-4 text-indigo-400 hover:text-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg></button></div>${waterHtml}<div class="flex items-center justify-between bg-white p-4 mt-6 rounded-lg border shadow-sm"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mt-6 space-y-2"><h4 class="font-bold">Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div class="mt-6"><h4 class="font-bold mb-2">Activity Time</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
-                $('speak-insight-btn').onclick=()=>speak(insight);
+                // Generate HTML Sections
+                const waterHtml=waterOz>0?`<div class="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-6"><h4 class="font-bold text-blue-900 mb-2 flex items-center">💧 Water Today</h4><div class="flex items-end justify-between"><span class="text-3xl font-bold text-blue-600">${waterOz}<span class="text-lg ml-1">oz</span></span><span class="text-sm text-blue-500">Goal: 64oz</span></div><div class="w-full bg-blue-200 rounded-full h-2 mt-2"><div class="bg-blue-600 h-2 rounded-full" style="width:${Math.min((waterOz/64)*100,100)}%"></div></div></div>`:'';
+                
+                const timeHtml = Object.values(timeTrack).some(v=>v>0) ? `<div class="mb-6"><h4 class="font-bold text-gray-900 mb-3">⏱️ Time Spent (Minutes)</h4><div class="grid grid-cols-2 gap-3">${Object.entries(timeTrack).map(([k,v])=>`<div class="bg-gray-50 p-3 rounded border border-gray-100"><p class="text-xs text-gray-500 uppercase">${k}</p><p class="text-2xl font-bold text-gray-900">${v}m</p></div>`).join('')}</div></div>` : '';
+
+                els.analyze.content.innerHTML=`${waterHtml}${timeHtml}<div class="flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm mb-6"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mb-6 space-y-2"><h4 class="font-bold">Habit Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div><h4 class="font-bold mb-2">Active Times</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
             }
 
-            if(window.SpeechRecognition||window.webkitSpeechRecognition){recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();recognition.continuous=false;recognition.lang='en-US';recognition.maxAlternatives=1;recognition.onstart=()=>{isRecording=true;els.voiceBtn.classList.add('recording')};recognition.onend=()=>{isRecording=false;els.voiceBtn.classList.remove('recording')};recognition.onresult=async(e)=>{let txt=e.results[0][0].transcript.toLowerCase().trim().replace(/^(please )?(log |add |track )?(that )?(i )?/,'').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");let time=getFormattedTime(new Date());const m=txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);if(m){txt=txt.replace(m[0],'').trim();try{let tStr=m[1].replace(/(am|pm)/g,'').trim(),h=0,min=0;if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;}if(m[1].includes('pm')&&h<12)h+=12;if(m[1].includes('am')&&h===12)h=0;time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;}catch(e){}}
-            let qty=null,unit=null; const qM=txt.match(/(\d+)\s*(oz|ounces?|ml|liters?)/i); if(qM){qty=parseInt(qM[1]);unit=qM[2].startsWith('o')?'oz':qM[2];txt=txt.replace(qM[0],'').trim();}
-            const matchData=await findBestMatch(txt); if(matchData && matchData.name) logHabit(matchData.name,matchData.time||time,matchData.qty||qty,matchData.unit||unit); else{pendingVoiceHabit={name:capitalize(txt),time,qty,unit};els.voice.name.textContent=pendingVoiceHabit.name;els.modals.voice.classList.remove('hidden');}};els.voiceBtn.onclick=()=>{if(isRecording)recognition.stop();else recognition.start();};}else{els.voiceBtn.style.display='none';}
+            // --- LISTENERS ---
+            if(window.SpeechRecognition||window.webkitSpeechRecognition){
+                recognition=new(window.SpeechRecognition||window.webkitSpeechRecognition)();recognition.continuous=false;recognition.lang='en-US';recognition.maxAlternatives=1;
+                recognition.onstart=()=>{isRecording=true;els.voiceBtn.classList.add('recording')};recognition.onend=()=>{isRecording=false;els.voiceBtn.classList.remove('recording')};
+                recognition.onresult=(e)=>{
+                    let txt=e.results[0][0].transcript.toLowerCase().trim().replace(/^(please )?(log |add |track )?(that )?(i )?/,'').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                    let time=getFormattedTime(new Date()), qty=null, unit=null;
+                    // Extract Time
+                    const tm=txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);
+                    if(tm){txt=txt.replace(tm[0],'').trim();try{let tStr=tm[1].replace(/(am|pm)/g,'').trim(),h=0,min=0;if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;}if(tm[1].includes('pm')&&h<12)h+=12;if(tm[1].includes('am')&&h===12)h=0;time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;}catch(e){}}
+                    // Extract Duration/Qty
+                    const qm=txt.match(/(\d+)\s*(oz|ounces?|ml|liters?|cups?|min|minutes?|hours?|hr)/i) || txt.match(/for\s+(\d+)\s*(min|minutes?|hours?|hr)/i);
+                    if(qm){
+                         qty=parseInt(qm[1]||qm[2]); // Handle different regex group capture positions
+                         let uStr = (qm[2]||qm[3]||'').toLowerCase();
+                         if(uStr.startsWith('o')) unit='oz'; else if(uStr.startsWith('m') && uStr.includes('i')) unit='min'; else if(uStr.startsWith('h')) unit='hr'; else unit=uStr;
+                         txt=txt.replace(qm[0],'').trim();
+                    }
+                    const match=findBestMatch(txt);
+                    if(match) logHabit(match,time,qty,unit);
+                    else{pendingVoiceHabit={name:capitalize(txt),time,qty,unit};els.voice.name.textContent=pendingVoiceHabit.name;els.modals.voice.classList.remove('hidden');}
+                };
+                els.voiceBtn.addEventListener('click',()=>{if(isRecording)recognition.stop();else recognition.start();});
+            }else{els.voiceBtn.style.display='none';}
 
-            els.habitForm.onsubmit=(e)=>{e.preventDefault();if(els.habitSelect.value)logHabit(els.habitSelect.value,els.timeInput.value);};
+            els.habitForm.onsubmit=(e)=>{e.preventDefault();if(els.habitSelect.value)logHabit(els.habitSelect.value,els.timeInput.value,els.habitQty.value,els.habitUnit.value);};
             els.timeInput.oninput=(e)=>{isTimeManuallyEdited=true;els.timeInputMobile.value=e.target.value;};els.timeInputMobile.oninput=(e)=>{isTimeManuallyEdited=true;els.timeInput.value=e.target.value;};els.habitSelect.onchange=()=>{isTimeManuallyEdited=false;updateTimeInput();};
             els.listContainer.onclick=(e)=>{const b=e.target.closest('button');if(!b)return;const{id,label,action}=b.dataset;if(label){const h=habits.find(i=>i.id===id);if(h){h.label=label;saveData();renderHabits();}}if(action==='delete'){habits=habits.filter(i=>i.id!==id);saveData();renderHabits();}};
             els.clearBtn.onclick=()=>els.modals.confirm.classList.remove('hidden');els.confirm.cancel.onclick=()=>els.modals.confirm.classList.add('hidden');els.confirm.delete.onclick=()=>{habits=[];saveData();renderHabits();els.modals.confirm.classList.add('hidden');};
-            els.settingsBtn.onclick=()=>{els.settings.keyInput.value=apiKey||'';renderManageList();els.modals.settings.classList.remove('hidden');};els.settings.close.onclick=()=>els.modals.settings.classList.add('hidden');
-            els.settings.save.onclick=()=>{apiKey=els.settings.keyInput.value.trim();saveData();els.modals.settings.classList.add('hidden');alert(apiKey?"Clarke connected!":"API Key removed.");};
-            els.settings.list.onclick=(e)=>{const b=e.target.closest('button');if(b&&b.dataset.act==='del'){habitList.splice(+b.dataset.i,1);saveData();renderManageList();renderSelect();}};
-            els.settings.addBtn.onclick=(e)=>{e.preventDefault();const v=els.settings.addInput.value.trim();if(v&&!habitList.includes(v)){habitList.push(v);habitList.sort();saveData();renderManageList();renderSelect();els.settings.addInput.value='';}};
-            els.settings.reset.onclick=()=>{if(confirm('Reset defaults?')){habitList=[...DEFAULT_HABITS];habitList.sort();saveData();renderManageList();renderSelect();}};
-            els.analyzeBtn.onclick=()=>{els.modals.analyze.classList.remove('hidden');els.analyze.content.classList.add('hidden');els.analyze.loading.classList.remove('hidden');els.analyze.status.textContent=apiKey?`Asking ${AI_NAME}...`:"Thinking...";setTimeout(async()=>{await generateAnalysis();els.analyze.loading.classList.add('hidden');els.analyze.content.classList.remove('hidden');},1000);};
-            els.analyze.close.onclick=()=>{els.modals.analyze.classList.add('hidden');window.speechSynthesis.cancel();};
+            els.manageBtn.onclick=()=>{renderManageList();els.modals.manage.classList.remove('hidden');};els.manage.close.onclick=()=>els.modals.manage.classList.add('hidden');
+            els.manage.list.onclick=(e)=>{const b=e.target.closest('button');if(b&&b.dataset.act==='del'){habitList.splice(+b.dataset.i,1);saveData();renderManageList();renderSelect();}};
+            els.manage.form.onsubmit=(e)=>{e.preventDefault();const v=els.manage.input.value.trim();if(v&&!habitList.includes(v)){habitList.push(v);habitList.sort();saveData();renderManageList();renderSelect();els.manage.input.value='';}};
+            els.manage.reset.onclick=()=>{if(confirm('Reset defaults?')){habitList=[...DEFAULT_HABITS];habitList.sort();saveData();renderManageList();renderSelect();}};
+            els.analyzeBtn.onclick=()=>{generateAnalysis();els.modals.analyze.classList.remove('hidden');};els.analyze.close.onclick=()=>els.modals.analyze.classList.add('hidden');
             els.voice.add.onclick=()=>{habitList.push(pendingVoiceHabit.name);habitList.sort();saveData();renderSelect();logHabit(pendingVoiceHabit.name,pendingVoiceHabit.time,pendingVoiceHabit.qty,pendingVoiceHabit.unit);els.modals.voice.classList.add('hidden');};
             els.voice.log.onclick=()=>{logHabit(pendingVoiceHabit.name,pendingVoiceHabit.time,pendingVoiceHabit.qty,pendingVoiceHabit.unit);els.modals.voice.classList.add('hidden');};
             els.voice.cancel.onclick=()=>els.modals.voice.classList.add('hidden');
 
-            updateTimeInput();loadData();initTTS();
+            updateTimeInput();loadData();
             document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateTimeInput();});setInterval(updateTimeInput,60000);
         });
     </script>
