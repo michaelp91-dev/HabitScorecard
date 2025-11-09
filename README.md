@@ -4,10 +4,6 @@ A privacy-focused, intelligent habit tracker based on the "Habits Scorecard" con
 
 > **Live App:** [https://michaelp91-dev.github.io/HabitScorecard/](https://michaelp91-dev.github.io/HabitScorecard/)
 
-<p align="center">
-  <img src="https://placehold.co/600x400/111827/FFFFFF?text=Habit+Scorecard+Preview&font=inter" alt="App Preview">
-</p>
-
 ## ✨ Features
 
 This is not just a standard checklist. It's designed to help you become aware of your daily automatic behaviors.
