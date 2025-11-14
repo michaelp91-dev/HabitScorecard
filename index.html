@@ -36,6 +36,9 @@
     </header>
     <main class="flex-1 overflow-y-auto py-6 sm:py-8">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <div id="routine-buttons-container" class="flex flex-wrap gap-2 mb-4">
+                </div>
             <div id="view-scorecard">
                 <form id="add-habit-form" class="flex flex-col gap-3 mb-6">
                     <div class="flex gap-2 w-full">
@@ -70,16 +73,92 @@
             </div>
         </div>
     </main>
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Manage Habits</h3><button id="close-settings-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div class="space-y-4"><div class="flex space-x-2"><input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2"><button id="manage-add-btn" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button></div><div class="h-64 overflow-y-auto border rounded-md p-2"><ul id="manage-list" class="divide-y divide-gray-100"></ul></div><div class="text-center pt-2"><button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset Habits to Default</button></div></div></div></div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content p-6 bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Manage Habits</h3>
+                <div class="flex items-center gap-2">
+                    <button id="goto-manage-routines-btn" class="px-3 py-1 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        Manage Routines &rarr;
+                    </button>
+                    <button id="close-settings-modal" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                </div>
+            <div class="space-y-4">
+                <div class="flex space-x-2">
+                    <input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2">
+                    <button id="manage-add-btn" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button>
+                </div>
+                <div class="h-64 overflow-y-auto border rounded-md p-2">
+                    <ul id="manage-list" class="divide-y divide-gray-100"></ul>
+                </div>
+                <div class="text-center pt-2">
+                    <button id="reset-defaults-button" class="text-xs text-red-600 hover:text-red-800">Reset Habits to Default</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="analyze-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50"><div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10"><h3 class="text-lg font-bold flex items-center text-indigo-900"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Analysis</h3><button id="close-analyze-modal" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><div id="analyze-content" class="flex-1 overflow-y-auto p-6 space-y-6"></div></div></div>
+    
     <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Clear All?</h3><p class="mt-2 text-gray-500">This action cannot be undone.</p><div class="mt-6 grid grid-cols-2 gap-3"><button id="confirm-delete-button" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-base font-medium text-white hover:bg-gray-800 sm:text-sm">Yes, Delete</button><button id="cancel-delete-button" class="w-full inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:text-sm">Cancel</button></div></div></div>
+    
     <div id="voice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay"><div class="modal-content p-6 bg-white"><h3 class="text-lg font-bold">Unknown Habit</h3><p class="mt-2 text-gray-500">I heard "<span id="voice-habit-name" class="font-medium text-gray-900"></span>". Not in your list yet.</p><div class="mt-6 flex flex-col sm:flex-row-reverse gap-2"><button id="voice-add-log-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 bg-black text-white sm:text-sm">Add to List & Log</button><button id="voice-log-only-btn" class="w-full inline-flex justify-center rounded-md border border-gray-300 bg-white text-gray-700 sm:text-sm">Log Only</button><button id="voice-cancel-btn" class="w-full inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-gray-500 sm:text-sm">Cancel</button></div></div></div>
 
+    <div id="execute-routine-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content flex flex-col max-h-[90vh] w-full max-w-md bg-gray-50">
+            <div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-lg z-10">
+                <h3 id="execute-routine-title" class="text-lg font-bold"></h3>
+                <button id="close-execute-routine-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div id="execute-routine-content" class="flex-1 overflow-y-auto p-6 space-y-3">
+                </div>
+        </div>
+    </div>
+
+    <div id="manage-routines-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 modal-overlay">
+        <div class="modal-content p-6 bg-white">
+            <div id="routine-list-view">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">Manage Routines</h3>
+                    <button id="close-routines-modal" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex space-x-2">
+                        <input type="text" id="routine-add-input" placeholder="New routine name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2">
+                        <button id="routine-add-btn" class="px-4 py-2 text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800">Add</button>
+                    </div>
+                    <div class="h-64 overflow-y-auto border rounded-md p-2">
+                        <ul id="manage-routine-list" class="divide-y divide-gray-100">
+                            </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="routine-edit-view" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="routine-edit-back-btn" class="text-gray-500 hover:text-gray-900">&larr; Back</button>
+                    <h3 id="routine-edit-title" class="text-lg font-bold"></h3>
+                    <button id="routine-edit-save-btn" class="px-3 py-1 text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Save</button>
+                </div>
+                <div id="routine-edit-habit-list" class="h-80 overflow-y-auto border rounded-md p-3 space-y-2">
+                    </div>
+            </div>
+        </div>
+    </div>
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
-            let habits=[],habitList=[],routines={},isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
-            const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list';
-            const ROUTINE_KEY='habitScorecard.routines';
+            let habits=[], habitList=[], routines={}, isTimeManuallyEdited=false, isRecording=false, recognition=null, pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
+            let currentEditingRoutine = null; // State for routine editor
+
+            const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list', ROUTINE_KEY='habitScorecard.routines';
             const DEFAULT_HABITS=["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
             const VERB_MAP={'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check','hit':'exercise'};
             const CONCEPT_MAP={
@@ -95,7 +174,39 @@
             const KEYWORD_BOOST = new Set([...Object.values(CONCEPT_MAP).flat()]);
 
             const $=(id)=>document.getElementById(id);
-            const els={habitForm:$('add-habit-form'),habitSelect:$('habit-select'),habitQty:$('habit-qty'),habitUnit:$('habit-unit'),habitNote:$('habit-note'),timeInput:$('habit-time-input'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),settingsBtn:$('settings-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),modals:{confirm:$('confirm-modal'),settings:$('settings-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},settings:{close:$('close-settings-modal'),list:$('manage-list'),addBtn:$('manage-add-btn'),addInput:$('manage-add-input'),reset:$('reset-defaults-button')},voice:{name:$('voice-habit-name'),add:$('voice-add-log-btn'),log:$('voice-log-only-btn'),cancel:$('voice-cancel-btn')},analyze:{close:$('close-analyze-modal'),content:$('analyze-content')},confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')}};
+            const els={
+                habitForm:$('add-habit-form'),habitSelect:$('habit-select'),habitQty:$('habit-qty'),habitUnit:$('habit-unit'),habitNote:$('habit-note'),timeInput:$('habit-time-input'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),
+                settingsBtn:$('settings-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),
+                modals:{confirm:$('confirm-modal'),settings:$('settings-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},
+                settings:{close:$('close-settings-modal'),list:$('manage-list'),addBtn:$('manage-add-btn'),addInput:$('manage-add-input'),reset:$('reset-defaults-button')},
+                voice:{name:$('voice-habit-name'),add:$('voice-add-log-btn'),log:$('voice-log-only-btn'),cancel:$('voice-cancel-btn')},
+                analyze:{close:$('close-analyze-modal'),content:$('analyze-content')},
+                confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')},
+                
+                // START: New Routine Elements
+                routineBtnContainer: $('routine-buttons-container'),
+                executeRoutine: {
+                    modal: $('execute-routine-modal'),
+                    title: $('execute-routine-title'),
+                    content: $('execute-routine-content'),
+                    close: $('close-execute-routine-modal')
+                },
+                routines: {
+                    modal: $('manage-routines-modal'),
+                    close: $('close-routines-modal'),
+                    goBtn: $('goto-manage-routines-btn'),
+                    addInput: $('routine-add-input'),
+                    addBtn: $('routine-add-btn'),
+                    list: $('manage-routine-list'),
+                    listView: $('routine-list-view'),
+                    editView: $('routine-edit-view'),
+                    editBack: $('routine-edit-back-btn'),
+                    editTitle: $('routine-edit-title'),
+                    editHabitList: $('routine-edit-habit-list'),
+                    editSave: $('routine-edit-save-btn')
+                }
+                // END: New Routine Elements
+            };
 
             const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             const updateTimeInput=(force=null)=>{const t=force||getFormattedTime(new Date());if(!isTimeManuallyEdited||force){els.timeInput.value=t;}};
@@ -123,17 +234,17 @@
                 habitList.sort((a,b) => a.localeCompare(b));
                 habits = JSON.parse(localStorage.getItem(HABIT_KEY)) || [];
                 habits = habits.filter(h => typeof h.text === 'string' && !h.text.includes('[object Promise]'));
-                routines = JSON.parse(localStorage.getItem(ROUTINE_KEY)) || {}; // Add this line
+                routines = JSON.parse(localStorage.getItem(ROUTINE_KEY)) || {}; // Load routines
                 saveData(); 
                 renderSelect(); 
                 renderHabits();
-                renderRoutineButtons(); // We will create this function next
+                renderRoutineButtons(); // Render routines
             }
 
             function saveData(){
                 localStorage.setItem(LIST_KEY, JSON.stringify(habitList));
                 localStorage.setItem(HABIT_KEY, JSON.stringify(habits));
-                localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); // Add this line
+                localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); // Save routines
             }
 
             function logHabit(text, timeStr, qty=null, unit=null, note=null){
@@ -160,7 +271,56 @@
                     return `<div class="p-4 flex items-center justify-between space-x-4"><div class="flex-1 min-w-0"><p class="text-lg font-medium flex items-center flex-wrap">${h.text}${badge}</p><p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p>${h.note?`<p class="text-xs text-gray-500 italic mt-1">"${h.note}"</p>`:''}</div><div class="flex-shrink-0 flex items-center space-x-2"><button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button><button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button><button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button><button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`;
                 }).join('');
             }
+
             function renderManageList(){els.settings.list.innerHTML=habitList.map((h,i)=>`<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1 truncate">${h}</span><button data-i="${i}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button></li>`).join('');}
+
+            // START: NEW ROUTINE FUNCTIONS
+            function renderRoutineButtons() {
+                els.routineBtnContainer.innerHTML = ''; // Clear existing buttons
+                for (const routineName of Object.keys(routines)) {
+                    const btn = document.createElement('button');
+                    btn.className = "inline-flex items-center px-4 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors";
+                    btn.textContent = routineName;
+                    btn.dataset.routine = routineName; // Store name for listener
+                    els.routineBtnContainer.appendChild(btn);
+                }
+            }
+            
+            function renderManageRoutineList() {
+                els.routines.list.innerHTML = '';
+                const names = Object.keys(routines).sort();
+                names.forEach(name => {
+                    els.routines.list.innerHTML += `<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded">
+                        <span class="flex-1 truncate">${name}</span>
+                        <button data-name="${name}" data-act="edit" class="text-indigo-600 hover:text-indigo-800 px-2 font-medium">Edit</button>
+                        <button data-name="${name}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button>
+                    </li>`;
+                });
+            }
+            
+            function showRoutineEditView(routineName) {
+                currentEditingRoutine = routineName;
+                els.routines.editTitle.textContent = `${routineName}`;
+                
+                const habitsInRoutine = new Set(routines[routineName] || []);
+                els.routines.editHabitList.innerHTML = '';
+                
+                // Populate with all habits from master list
+                habitList.forEach(habit => {
+                    const isChecked = habitsInRoutine.has(habit);
+                    els.routines.editHabitList.innerHTML += `
+                        <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200 cursor-pointer">
+                            <input type="checkbox" class="mr-3 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" data-habit="${habit}" ${isChecked ? 'checked' : ''}>
+                            ${habit}
+                        </label>
+                    `;
+                });
+                
+                els.routines.listView.classList.add('hidden');
+                els.routines.editView.classList.remove('hidden');
+            }
+            // END: NEW ROUTINE FUNCTIONS
+
 
             async function generateAnalysis() {
                 if(habits.length===0){els.analyze.content.innerHTML='<p class="text-center text-gray-500 py-8">No data yet.</p>';return;}
@@ -190,6 +350,9 @@
                 const timeHtml=activeTimes.length>0?`<div class="mb-6"><h4 class="font-bold text-gray-900 mb-3">⏱️ Time Spent Today</h4><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${activeTimes.map(([k,v])=>`<div class="bg-gray-50 p-3 rounded border border-gray-100"><p class="text-xs text-gray-500 uppercase truncate">${k}</p><p class="text-xl sm:text-2xl font-bold text-gray-900">${v}<span class="text-sm font-normal text-gray-500 ml-1">m</span></p></div>`).join('')}</div></div>`:'';
 
                 let insight = total < 5 ? "Keep logging to reveal patterns." : (net > (total * 0.3) ? "Great positive momentum!" : (neg > pos ? "Environment might be triggering negative loops." : "Balanced scorecard. Awareness is key."));
+                
+                // Temp fix for AI_NAME not defined
+                const AI_NAME = "Analyzer"; 
 
                 els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm relative"><strong>🤖 ${AI_NAME}:</strong> ${insight}</div>${waterHtml}${timeHtml}<div class="flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm mb-6"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mb-6 space-y-2"><h4 class="font-bold">Habit Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div><h4 class="font-bold mb-2">Active Times</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
             }
@@ -209,7 +372,7 @@
                     const tm = txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);
                     if(tm) { txt = txt.replace(tm[0],'').trim(); try { let tStr=tm[1].replace(/(am|pm)/g,'').trim(),h=0,min=0; if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;} if(tm[1].includes('pm')&&h<12)h+=12; if(tm[1].includes('am')&&h===12)h=0; time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`; } catch(e){} }
                     // Extract Qty
-                    const qm = txt.match(/(\d+)\s*(oz|ounces?|ml|liters?|cups?|min|minutes?|hours?|hr)/i) || txt.match(/for\s+(\d+)\s*(min|minutes?|hours?|hr)/i);
+                    const qm = txt.match(/(\d+)\s*(oz|ounces?|ml|liters?|cups?|min|minutes?|hours?|hr)/i) || txt.match(/for\s+(\d+)\s*(min|minutes?|hr)/i);
                     if(qm) { qty = parseInt(qm[1]||qm[2]); let uStr=(qm[2]||qm[3]||'').toLowerCase(); if(uStr.startsWith('o')) unit='oz'; else if(uStr.startsWith('m')&&uStr.includes('i')) unit='min'; else if(uStr.startsWith('h')) unit='hr'; else unit=uStr; txt = txt.replace(qm[0],'').trim(); }
                     
                     const match = findBestMatch(txt);
@@ -230,11 +393,128 @@
             els.settings.list.onclick = (e) => { const b = e.target.closest('button'); if(b && b.dataset.act==='del') { habitList.splice(+b.dataset.i, 1); saveData(); renderManageList(); renderSelect(); }};
             els.settings.addBtn.onclick = (e) => { e.preventDefault(); const v = els.settings.addInput.value.trim(); if(v && !habitList.includes(v)) { habitList.push(v); habitList.sort(); saveData(); renderManageList(); renderSelect(); els.settings.addInput.value=''; }};
             els.settings.reset.onclick = () => { if(confirm('Reset defaults?')) { habitList=[...DEFAULT_HABITS]; habitList.sort(); saveData(); renderManageList(); renderSelect(); }};
-            els.analyzeBtn.onclick = () => { els.modals.analyze.classList.remove('hidden'); els.analyze.content.classList.add('hidden'); els.analyze.loading.classList.remove('hidden'); els.analyze.status.textContent = "Thinking..."; setTimeout(async () => { await generateAnalysis(); els.analyze.loading.classList.add('hidden'); els.analyze.content.classList.remove('hidden'); }, 1000); };
+            
+            // Modified to handle missing elements gracefully
+            els.analyzeBtn.onclick = () => { 
+                els.modals.analyze.classList.remove('hidden'); 
+                els.analyze.content.innerHTML = '<p class="text-center text-gray-500 py-8">Loading analysis...</p>'; // Show loading state
+                setTimeout(async () => { 
+                    await generateAnalysis(); 
+                }, 100); // Short delay to allow UI to show loading
+            };
             els.analyze.close.onclick = () => els.modals.analyze.classList.add('hidden');
+
             els.voice.add.onclick = () => { habitList.push(pendingVoiceHabit.name); habitList.sort(); saveData(); renderSelect(); logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
             els.voice.log.onclick = () => { logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
             els.voice.cancel.onclick = () => els.modals.voice.classList.add('hidden');
+
+            // START: NEW ROUTINE LISTENERS
+            els.routineBtnContainer.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (btn && btn.dataset.routine) {
+                    const routineName = btn.dataset.routine;
+                    const habitsInRoutine = routines[routineName] || [];
+                    
+                    els.executeRoutine.title.textContent = routineName;
+                    els.executeRoutine.content.innerHTML = ''; // Clear previous
+                    
+                    if (habitsInRoutine.length === 0) {
+                        els.executeRoutine.content.innerHTML = '<p class="text-gray-500">No habits in this routine. Add some in Settings.</p>';
+                    } else {
+                        // Create a button for each habit in the routine
+                        habitsInRoutine.forEach(habitText => {
+                            const habitBtn = document.createElement('button');
+                            habitBtn.className = "w-full p-4 bg-white border border-gray-300 rounded-md text-lg font-medium text-gray-900 text-left hover:bg-gray-50 transition-all";
+                            habitBtn.textContent = habitText;
+                            habitBtn.dataset.habit = habitText;
+                            els.executeRoutine.content.appendChild(habitBtn);
+                        });
+                    }
+                    els.executeRoutine.modal.classList.remove('hidden');
+                }
+            };
+
+            els.executeRoutine.content.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (btn && btn.dataset.habit && !btn.disabled) {
+                    const habitText = btn.dataset.habit;
+                    const timeStr = getFormattedTime(new Date());
+                    
+                    logHabit(habitText, timeStr);
+                    
+                    btn.disabled = true;
+                    btn.textContent = `✅ ${habitText}`;
+                    btn.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+                }
+            };
+
+            els.executeRoutine.close.onclick = () => {
+                els.executeRoutine.modal.classList.add('hidden');
+            };
+
+            els.routines.goBtn.onclick = () => {
+                renderManageRoutineList();
+                els.modals.settings.classList.add('hidden');
+                els.routines.modal.classList.remove('hidden');
+                els.routines.editView.classList.add('hidden');
+        els.routines.listView.classList.remove('hidden');
+            };
+            
+            els.routines.close.onclick = () => {
+                els.routines.modal.classList.add('hidden');
+            };
+
+            els.routines.addBtn.onclick = () => {
+                const name = els.routines.addInput.value.trim();
+                if (name && !routines[name]) {
+                    routines[name] = []; // Add new routine
+                    saveData();
+                    renderManageRoutineList();
+                    renderRoutineButtons(); // Update main UI
+                    els.routines.addInput.value = '';
+                }
+            };
+            
+            els.routines.list.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const { name, act } = btn.dataset;
+                
+                if (act === 'del') {
+                    if (confirm(`Delete routine "${name}"?`)) {
+                        delete routines[name];
+                        saveData();
+                        renderManageRoutineList();
+                        renderRoutineButtons(); // Update main UI
+                    }
+                } else if (act === 'edit') {
+                    showRoutineEditView(name);
+                }
+            };
+            
+            els.routines.editBack.onclick = () => {
+                els.routines.editView.classList.add('hidden');
+                els.routines.listView.classList.remove('hidden');
+                currentEditingRoutine = null;
+            };
+            
+            els.routines.editSave.onclick = () => {
+                if (!currentEditingRoutine) return;
+                
+                const selectedHabits = [];
+                els.routines.editHabitList.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
+                    selectedHabits.push(input.dataset.habit);
+                });
+                
+                routines[currentEditingRoutine] = selectedHabits;
+                saveData();
+                
+                els.routines.editView.classList.add('hidden');
+                els.routines.listView.classList.remove('hidden');
+                renderManageRoutineList();
+                currentEditingRoutine = null;
+            };
+            // END: NEW ROUTINE LISTENERS
 
             updateTimeInput(); loadData();
             document.addEventListener('visibilitychange', () => { if(!document.hidden) updateTimeInput(); });
