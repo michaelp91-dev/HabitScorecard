@@ -20,6 +20,13 @@
         .label-button:active { transform: scale(0.95); }
         .modal-overlay { background-color: rgba(17, 24, 39, 0.5); }
         .modal-content { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 90%; width: 400px; }
+        
+        /* START: Drag-and-Drop Styles */
+        label[draggable="true"] { cursor: grab; }
+        label[draggable="true"]:active { cursor: grabbing; }
+        label.drag-over { background-color: #f0f9ff; border-color: #bae6fd; }
+        /* END: Drag-and-Drop Styles */
+        
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .recording { animation: pulse-red 1.5s infinite; color: #ef4444 !important; border-color: #ef4444 !important; }
     </style>
@@ -39,6 +46,7 @@
 
             <div id="routine-buttons-container" class="flex flex-wrap gap-2 mb-4">
                 </div>
+
             <div id="view-scorecard">
                 <form id="add-habit-form" class="flex flex-col gap-3 mb-6">
                     <div class="flex gap-2 w-full">
@@ -86,7 +94,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                </div>
+            </div>
             <div class="space-y-4">
                 <div class="flex space-x-2">
                     <input type="text" id="manage-add-input" placeholder="New habit name..." class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2">
@@ -153,10 +161,14 @@
             </div>
         </div>
     </div>
+
+
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
             let habits=[], habitList=[], routines={}, isTimeManuallyEdited=false, isRecording=false, recognition=null, pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
+            
             let currentEditingRoutine = null; // State for routine editor
+            let dragSrcEl = null; // State for drag/drop
 
             const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list', ROUTINE_KEY='habitScorecard.routines';
             const DEFAULT_HABITS=["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
@@ -183,7 +195,6 @@
                 analyze:{close:$('close-analyze-modal'),content:$('analyze-content')},
                 confirm:{delete:$('confirm-delete-button'),cancel:$('cancel-delete-button')},
                 
-                // START: New Routine Elements
                 routineBtnContainer: $('routine-buttons-container'),
                 executeRoutine: {
                     modal: $('execute-routine-modal'),
@@ -205,7 +216,6 @@
                     editHabitList: $('routine-edit-habit-list'),
                     editSave: $('routine-edit-save-btn')
                 }
-                // END: New Routine Elements
             };
 
             const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
@@ -274,7 +284,7 @@
 
             function renderManageList(){els.settings.list.innerHTML=habitList.map((h,i)=>`<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1 truncate">${h}</span><button data-i="${i}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button></li>`).join('');}
 
-            // START: NEW ROUTINE FUNCTIONS
+            // --- ROUTINE FUNCTIONS ---
             function renderRoutineButtons() {
                 els.routineBtnContainer.innerHTML = ''; // Clear existing buttons
                 for (const routineName of Object.keys(routines)) {
@@ -298,28 +308,106 @@
                 });
             }
             
+            // START: MODIFIED showRoutineEditView
             function showRoutineEditView(routineName) {
                 currentEditingRoutine = routineName;
                 els.routines.editTitle.textContent = `${routineName}`;
                 
-                const habitsInRoutine = new Set(routines[routineName] || []);
-                els.routines.editHabitList.innerHTML = '';
+                const habitsInRoutine = routines[routineName] || [];
+                const habitsInRoutineSet = new Set(habitsInRoutine);
+                const otherHabits = habitList.filter(h => !habitsInRoutineSet.has(h)); // Already alphabetical
                 
-                // Populate with all habits from master list
-                habitList.forEach(habit => {
-                    const isChecked = habitsInRoutine.has(habit);
+                els.routines.editHabitList.innerHTML = ''; // Clear list
+
+                // 1. Render habits already in the routine (in their saved order)
+                habitsInRoutine.forEach(habit => {
                     els.routines.editHabitList.innerHTML += `
-                        <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200 cursor-pointer">
-                            <input type="checkbox" class="mr-3 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" data-habit="${habit}" ${isChecked ? 'checked' : ''}>
+                        <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200" draggable="true" data-habit-label="${habit}">
+                            <input type="checkbox" class="mr-3 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" data-habit="${habit}" checked>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
                             ${habit}
                         </label>
                     `;
+                });
+
+                // 2. Render other habits (alphabetically)
+                otherHabits.forEach(habit => {
+                    els.routines.editHabitList.innerHTML += `
+                        <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200" draggable="true" data-habit-label="${habit}">
+                            <input type="checkbox" class="mr-3 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" data-habit="${habit}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                            ${habit}
+                        </label>
+                    `;
+                });
+
+                // 3. Attach drag-and-drop listeners
+                els.routines.editHabitList.querySelectorAll('label[draggable="true"]').forEach(label => {
+                    label.addEventListener('dragstart', handleDragStart, false);
+                    label.addEventListener('dragenter', handleDragEnter, false);
+                    label.addEventListener('dragover', handleDragOver, false);
+                    label.addEventListener('dragleave', handleDragLeave, false);
+                    label.addEventListener('drop', handleDrop, false);
+                    label.addEventListener('dragend', handleDragEnd, false);
                 });
                 
                 els.routines.listView.classList.add('hidden');
                 els.routines.editView.classList.remove('hidden');
             }
-            // END: NEW ROUTINE FUNCTIONS
+            // END: MODIFIED showRoutineEditView
+
+            // START: NEW Drag-and-Drop Handlers
+            function handleDragStart(e) {
+                // 'this' is the label being dragged
+                this.style.opacity = '0.4';
+                dragSrcEl = this;
+                e.dataTransfer.effectAllowed = 'move';
+            }
+
+            function handleDragOver(e) {
+                if (e.preventDefault) { e.preventDefault(); }
+                e.dataTransfer.dropEffect = 'move';
+                return false;
+            }
+
+            function handleDragEnter(e) {
+                // 'this' is the label being hovered over
+                this.classList.add('drag-over');
+            }
+            
+            function handleDragLeave(e) {
+                this.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                if (e.stopPropagation) { e.stopPropagation(); }
+                // 'this' is the label being dropped on
+                if (dragSrcEl !== this) {
+                    const allItems = Array.from(this.parentNode.children);
+                    const srcIndex = allItems.indexOf(dragSrcEl);
+                    const targetIndex = allItems.indexOf(this);
+
+                    if (srcIndex < targetIndex) {
+                        // Dragging down: insert *after* the target
+                        this.parentNode.insertBefore(dragSrcEl, this.nextSibling);
+                    } else {
+                        // Dragging up: insert *before* the target
+                        this.parentNode.insertBefore(dragSrcEl, this);
+                    }
+                }
+                this.classList.remove('drag-over');
+                return false;
+            }
+
+            function handleDragEnd(e) {
+                // 'this' is the label that was dragged
+                this.style.opacity = '1';
+                // Clean up all drag-over indicators
+                els.routines.editHabitList.querySelectorAll('label').forEach(label => {
+                    label.classList.remove('drag-over');
+                });
+            }
+            // END: NEW Drag-and-Drop Handlers
 
 
             async function generateAnalysis() {
@@ -351,7 +439,6 @@
 
                 let insight = total < 5 ? "Keep logging to reveal patterns." : (net > (total * 0.3) ? "Great positive momentum!" : (neg > pos ? "Environment might be triggering negative loops." : "Balanced scorecard. Awareness is key."));
                 
-                // Temp fix for AI_NAME not defined
                 const AI_NAME = "Analyzer"; 
 
                 els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm relative"><strong>🤖 ${AI_NAME}:</strong> ${insight}</div>${waterHtml}${timeHtml}<div class="flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm mb-6"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mb-6 space-y-2"><h4 class="font-bold">Habit Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div><h4 class="font-bold mb-2">Active Times</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
@@ -366,12 +453,9 @@
                 recognition.onresult = (e) => {
                     let txt = e.results[0][0].transcript.toLowerCase().trim().replace(/^(please )?(log |add |track )?(that )?(i )?/,'').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
                     let time = getFormattedTime(new Date()), qty = null, unit = null, note = null;
-                    // Extract Note
                     const parts = txt.split(' note '); if(parts.length > 1) { txt = parts.shift().trim(); note = parts.join(' note ').trim().substring(0,140); }
-                    // Extract Time
                     const tm = txt.match(/ at (\d{1,2}(?::\d{2})?\s?(?:am|pm)?|\d{4})$/i);
                     if(tm) { txt = txt.replace(tm[0],'').trim(); try { let tStr=tm[1].replace(/(am|pm)/g,'').trim(),h=0,min=0; if(tStr.includes(':')){const p=tStr.split(':');h=+p[0];min=+p[1];}else if(tStr.length===4){h=+tStr.substring(0,2);min=+tStr.substring(2,4);}else{h=+tStr;} if(tm[1].includes('pm')&&h<12)h+=12; if(tm[1].includes('am')&&h===12)h=0; time=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`; } catch(e){} }
-                    // Extract Qty
                     const qm = txt.match(/(\d+)\s*(oz|ounces?|ml|liters?|cups?|min|minutes?|hours?|hr)/i) || txt.match(/for\s+(\d+)\s*(min|minutes?|hr)/i);
                     if(qm) { qty = parseInt(qm[1]||qm[2]); let uStr=(qm[2]||qm[3]||'').toLowerCase(); if(uStr.startsWith('o')) unit='oz'; else if(uStr.startsWith('m')&&uStr.includes('i')) unit='min'; else if(uStr.startsWith('h')) unit='hr'; else unit=uStr; txt = txt.replace(qm[0],'').trim(); }
                     
@@ -394,13 +478,12 @@
             els.settings.addBtn.onclick = (e) => { e.preventDefault(); const v = els.settings.addInput.value.trim(); if(v && !habitList.includes(v)) { habitList.push(v); habitList.sort(); saveData(); renderManageList(); renderSelect(); els.settings.addInput.value=''; }};
             els.settings.reset.onclick = () => { if(confirm('Reset defaults?')) { habitList=[...DEFAULT_HABITS]; habitList.sort(); saveData(); renderManageList(); renderSelect(); }};
             
-            // Modified to handle missing elements gracefully
             els.analyzeBtn.onclick = () => { 
                 els.modals.analyze.classList.remove('hidden'); 
-                els.analyze.content.innerHTML = '<p class="text-center text-gray-500 py-8">Loading analysis...</p>'; // Show loading state
+                els.analyze.content.innerHTML = '<p class="text-center text-gray-500 py-8">Loading analysis...</p>';
                 setTimeout(async () => { 
                     await generateAnalysis(); 
-                }, 100); // Short delay to allow UI to show loading
+                }, 100);
             };
             els.analyze.close.onclick = () => els.modals.analyze.classList.add('hidden');
 
@@ -408,7 +491,7 @@
             els.voice.log.onclick = () => { logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
             els.voice.cancel.onclick = () => els.modals.voice.classList.add('hidden');
 
-            // START: NEW ROUTINE LISTENERS
+            // --- ROUTINE LISTENERS ---
             els.routineBtnContainer.onclick = (e) => {
                 const btn = e.target.closest('button');
                 if (btn && btn.dataset.routine) {
@@ -416,12 +499,12 @@
                     const habitsInRoutine = routines[routineName] || [];
                     
                     els.executeRoutine.title.textContent = routineName;
-                    els.executeRoutine.content.innerHTML = ''; // Clear previous
+                    els.executeRoutine.content.innerHTML = ''; 
                     
                     if (habitsInRoutine.length === 0) {
                         els.executeRoutine.content.innerHTML = '<p class="text-gray-500">No habits in this routine. Add some in Settings.</p>';
                     } else {
-                        // Create a button for each habit in the routine
+                        // This now respects the saved order
                         habitsInRoutine.forEach(habitText => {
                             const habitBtn = document.createElement('button');
                             habitBtn.className = "w-full p-4 bg-white border border-gray-300 rounded-md text-lg font-medium text-gray-900 text-left hover:bg-gray-50 transition-all";
@@ -450,6 +533,7 @@
 
             els.executeRoutine.close.onclick = () => {
                 els.executeRoutine.modal.classList.add('hidden');
+CSS
             };
 
             els.routines.goBtn.onclick = () => {
@@ -457,7 +541,7 @@
                 els.modals.settings.classList.add('hidden');
                 els.routines.modal.classList.remove('hidden');
                 els.routines.editView.classList.add('hidden');
-        els.routines.listView.classList.remove('hidden');
+                els.routines.listView.classList.remove('hidden');
             };
             
             els.routines.close.onclick = () => {
@@ -467,10 +551,10 @@
             els.routines.addBtn.onclick = () => {
                 const name = els.routines.addInput.value.trim();
                 if (name && !routines[name]) {
-                    routines[name] = []; // Add new routine
+                    routines[name] = []; 
                     saveData();
                     renderManageRoutineList();
-                    renderRoutineButtons(); // Update main UI
+                    renderRoutineButtons(); 
                     els.routines.addInput.value = '';
                 }
             };
@@ -485,7 +569,7 @@
                         delete routines[name];
                         saveData();
                         renderManageRoutineList();
-                        renderRoutineButtons(); // Update main UI
+                        renderRoutineButtons();
                     }
                 } else if (act === 'edit') {
                     showRoutineEditView(name);
@@ -498,12 +582,19 @@
                 currentEditingRoutine = null;
             };
             
+            // START: MODIFIED Save Button Logic
             els.routines.editSave.onclick = () => {
                 if (!currentEditingRoutine) return;
                 
                 const selectedHabits = [];
-                els.routines.editHabitList.querySelectorAll('input[type="checkbox"]:checked').forEach(input => {
-                    selectedHabits.push(input.dataset.habit);
+                
+                // Iterate all labels IN THEIR CURRENT DOM ORDER
+                els.routines.editHabitList.querySelectorAll('label').forEach(label => {
+                    const checkbox = label.querySelector('input[type="checkbox"]');
+                    if (checkbox && checkbox.checked) {
+                        // Add the habit if it's checked
+                        selectedHabits.push(checkbox.dataset.habit);
+                    }
                 });
                 
                 routines[currentEditingRoutine] = selectedHabits;
@@ -514,7 +605,7 @@
                 renderManageRoutineList();
                 currentEditingRoutine = null;
             };
-            // END: NEW ROUTINE LISTENERS
+            // END: MODIFIED Save Button Logic
 
             updateTimeInput(); loadData();
             document.addEventListener('visibilitychange', () => { if(!document.hidden) updateTimeInput(); });
