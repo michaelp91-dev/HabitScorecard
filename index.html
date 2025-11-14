@@ -77,8 +77,9 @@
 
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
-            let habits=[],habitList=[],isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
+            let habits=[],habitList=[],routines={},isTimeManuallyEdited=false,isRecording=false,recognition=null,pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
             const HABIT_KEY='habitScorecard.habits', LIST_KEY='habitScorecard.list';
+            const ROUTINE_KEY='habitScorecard.routines';
             const DEFAULT_HABITS=["Attend meeting","Bite nails","Brush teeth","Buy something unnecessary","Call a friend / family member","Check email","Check phone","Commute to work / school","Cook dinner","Do laundry","Drink water","Eat a fruit / vegetable","Eat breakfast","Eat dinner","Eat lunch","Eat sugar / snacks","Exercise / Workout","Feed pet","Floss teeth","Get dressed","Go for a walk","Go to bathroom","Go to bed","Journal","Make bed","Make coffee / tea","Meditate","Plan tomorrow's to-do list","Practice a hobby","Read a book","Scroll social media","Set alarm for tomorrow","Skincare routine","Smoke cigarette","Stretch","Take a break","Take a shower","Tidy up living space","Turn off alarm","Wake up","Wash dishes","Watch TV","Weigh myself"];
             const VERB_MAP={'woke':'wake','drank':'drink','ate':'eat','went':'go','did':'do','took':'take','bought':'buy','read':'read','brushed':'brush','flossed':'floss','fed':'feed','made':'make','sat':'sit','stood':'stand','ran':'run','walked':'walk','cooked':'cook','washed':'wash','watched':'watch','checked':'check','hit':'exercise'};
             const CONCEPT_MAP={
@@ -122,12 +123,17 @@
                 habitList.sort((a,b) => a.localeCompare(b));
                 habits = JSON.parse(localStorage.getItem(HABIT_KEY)) || [];
                 habits = habits.filter(h => typeof h.text === 'string' && !h.text.includes('[object Promise]'));
-                saveData(); renderSelect(); renderHabits();
+                routines = JSON.parse(localStorage.getItem(ROUTINE_KEY)) || {}; // Add this line
+                saveData(); 
+                renderSelect(); 
+                renderHabits();
+                renderRoutineButtons(); // We will create this function next
             }
 
             function saveData(){
                 localStorage.setItem(LIST_KEY, JSON.stringify(habitList));
                 localStorage.setItem(HABIT_KEY, JSON.stringify(habits));
+                localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); // Add this line
             }
 
             function logHabit(text, timeStr, qty=null, unit=null, note=null){
