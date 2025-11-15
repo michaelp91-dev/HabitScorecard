@@ -62,8 +62,15 @@
                             </select>
                         </div>
                     </div>
+                    
                     <div class="flex gap-2 w-full">
                         <input type="text" id="habit-note" maxlength="140" placeholder="Optional note..." class="flex-1 min-w-0 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3">
+                        <select id="habit-focus" class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-base p-3">
+                            <option value="none" selected>Focus</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
                         <button type="button" id="voice-log-btn" class="p-3 border border-gray-300 text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 transition-all flex-shrink-0" title="Voice Log">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                         </button>
@@ -165,7 +172,7 @@
 
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
-            let habits=[], habitList=[], routines={}, isTimeManuallyEdited=false, isRecording=false, recognition=null, pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null};
+            let habits=[], habitList=[], routines={}, isTimeManuallyEdited=false, isRecording=false, recognition=null, pendingVoiceHabit={name:null,time:null,qty:null,unit:null,note:null,focus:null};
             
             let currentEditingRoutine = null; // State for routine editor
             let dragSrcEl = null; // State for drag/drop
@@ -187,7 +194,13 @@
 
             const $=(id)=>document.getElementById(id);
             const els={
-                habitForm:$('add-habit-form'),habitSelect:$('habit-select'),habitQty:$('habit-qty'),habitUnit:$('habit-unit'),habitNote:$('habit-note'),timeInput:$('habit-time-input'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),
+                habitForm:$('add-habit-form'),habitSelect:$('habit-select'),habitQty:$('habit-qty'),habitUnit:$('habit-unit'),habitNote:$('habit-note'),
+                
+                // START: CHANGE #2 - Added habitFocus to els object
+                habitFocus:$('habit-focus'),
+                // END: CHANGE #2
+                
+                timeInput:$('habit-time-input'),listContainer:$('habit-list-container'),clearBtn:$('clear-all-habits-button'),
                 settingsBtn:$('settings-btn'),voiceBtn:$('voice-log-btn'),analyzeBtn:$('analyze-btn'),
                 modals:{confirm:$('confirm-modal'),settings:$('settings-modal'),voice:$('voice-modal'),analyze:$('analyze-modal')},
                 settings:{close:$('close-settings-modal'),list:$('manage-list'),addBtn:$('manage-add-btn'),addInput:$('manage-add-input'),reset:$('reset-defaults-button')},
@@ -217,7 +230,6 @@
                     editSave: $('routine-edit-save-btn')
                 },
 
-                // START: NEW Top 3 Element
                 top3Container: $('top3-habits-container')
             };
 
@@ -261,32 +273,89 @@
                 localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); 
             }
 
-            function logHabit(text, timeStr, qty=null, unit=null, note=null){
+            // START: CHANGE #3 - Updated logHabit function
+            function logHabit(text, timeStr, qty=null, unit=null, note=null, focus='none'){
                 if(typeof text !== 'string') return;
                 if(unit === 'hr' || unit === 'hour'){ qty = (parseFloat(qty)||0)*60; unit = 'min'; }
                 let safeQty = qty ? parseFloat(qty) : null;
                 if (safeQty !== null && (isNaN(safeQty) || safeQty < 0)) { alert("Please enter a valid positive number."); return; }
-                habits.push({id:crypto.randomUUID(), text, label:'none', createdAt:new Date().getTime(), displayTime:timeStr, quantity:safeQty, unit, note:note?note.substring(0,140):null});
+                
+                habits.push({
+                    id:crypto.randomUUID(), 
+                    text, 
+                    label:'none', 
+                    createdAt:new Date().getTime(), 
+                    displayTime:timeStr, 
+                    quantity:safeQty, 
+                    unit, 
+                    note:note?note.substring(0,140):null,
+                    focus: focus // Added focus level to data object
+                });
+                
                 saveData(); 
                 renderHabits();
-                renderTop3Habits(); // Update Top 3
-                els.habitSelect.value=""; els.habitQty.value=""; els.habitUnit.value=""; els.habitNote.value=""; isTimeManuallyEdited=false; updateTimeInput();
+                renderTop3Habits(); 
+                
+                // Reset all form fields
+                els.habitSelect.value=""; 
+                els.habitQty.value=""; 
+                els.habitUnit.value=""; 
+                els.habitNote.value=""; 
+                els.habitFocus.value="none"; // Reset focus dropdown
+                isTimeManuallyEdited=false; 
+                updateTimeInput();
             }
-
+            // END: CHANGE #3
             function renderSelect(){
                 const c = els.habitSelect.value;
                 els.habitSelect.innerHTML = '<option value="" disabled selected>Select a habit...</option>' + habitList.map(h => `<option value="${h}">${h}</option>`).join('');
                 if(habitList.includes(c)) els.habitSelect.value = c;
             }
 
+            // START: CHANGE #4 - Updated renderHabits to show Focus Badge
             function renderHabits(){
                 if(habits.length===0){els.listContainer.innerHTML=`<div class="p-8 text-center text-gray-500">No habits logged yet.</div>`;els.clearBtn.style.display='none';return;}
                 els.clearBtn.style.display='inline-block';habits.sort((a,b)=>b.createdAt-a.createdAt);
+                
                 els.listContainer.innerHTML=habits.map(h=>{
-                    let badge=''; if(h.quantity){ if(['min','hr'].includes(h.unit)) badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">⏱️ ${h.quantity}m</span>`; else badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">💧 ${h.quantity} ${h.unit}</span>`; }
-                    return `<div class="p-4 flex items-center justify-between space-x-4"><div class="flex-1 min-w-0"><p class="text-lg font-medium flex items-center flex-wrap">${h.text}${badge}</p><p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p>${h.note?`<p class="text-xs text-gray-500 italic mt-1">"${h.note}"</p>`:''}</div><div class="flex-shrink-0 flex items-center space-x-2"><button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button><button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button><button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button><button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`;
+                    // Badge for qty/unit
+                    let badge=''; 
+                    if(h.quantity){ 
+                        if(['min','hr'].includes(h.unit)) badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">⏱️ ${h.quantity}m</span>`; 
+                        else badge=`<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">💧 ${h.quantity} ${h.unit}</span>`; 
+                    }
+
+                    // New Badge for Focus Level
+                    let focusBadge = '';
+                    if (h.focus && h.focus !== 'none') {
+                        let colorClass = '';
+                        const focusText = h.focus.charAt(0).toUpperCase() + h.focus.slice(1);
+                        switch (h.focus) {
+                            case 'low': colorClass = 'bg-gray-100 text-gray-800'; break;
+                            case 'medium': colorClass = 'bg-blue-100 text-blue-800'; break;
+                            case 'high': colorClass = 'bg-indigo-100 text-indigo-800'; break;
+                        }
+                        focusBadge = `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}">🎯 ${focusText} Focus</span>`;
+                    }
+
+                    return `<div class="p-4 flex items-center justify-between space-x-4">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-lg font-medium flex items-center flex-wrap">${h.text}${badge}${focusBadge}</p>
+                                    <p class="text-sm text-gray-500">${new Date(h.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})} at ${h.displayTime}</p>
+                                    ${h.note?`<p class="text-xs text-gray-500 italic mt-1">"${h.note}"</p>`:''}
+                                </div>
+                                <div class="flex-shrink-0 flex items-center space-x-2">
+                                    <button data-id="${h.id}" data-label="positive" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='positive'?'label-positive':'label-none'}">+</button>
+                                    <button data-id="${h.id}" data-label="negative" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='negative'?'label-negative':'label-none'}">&minus;</button>
+                                    <button data-id="${h.id}" data-label="neutral" class="label-button w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${h.label==='neutral'?'label-neutral':'label-none'}">=</button>
+                                    <button data-id="${h.id}" data-action="delete" class="ml-2 text-gray-400 hover:text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>`;
                 }).join('');
             }
+            // END: CHANGE #4
 
             function renderManageList(){els.settings.list.innerHTML=habitList.map((h,i)=>`<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1 truncate">${h}</span><button data-i="${i}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button></li>`).join('');}
 
@@ -323,7 +392,6 @@
                     els.routineBtnContainer.appendChild(btn);
                 }
             }
-            
             function renderManageRoutineList() {
                 els.routines.list.innerHTML = '';
                 const names = Object.keys(routines).sort();
@@ -457,7 +525,6 @@
 
                 els.analyze.content.innerHTML=`<div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-indigo-900 text-sm relative"><strong>🤖 ${AI_NAME}:</strong> ${insight}</div>${waterHtml}${timeHtml}<div class="flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm mb-6"><div><p class="text-sm font-medium text-gray-500 uppercase">Net Score</p></div><div class="text-4xl font-bold ${net>0?'text-green-600':(net<0?'text-red-600':'text-gray-900')}">${net>0?'+':''}${net}</div></div><div class="mb-6 space-y-2"><h4 class="font-bold">Habit Breakdown</h4>${[['Positive (+)',pos,'#111827'],['Negative (-)',neg,'#9ca3af'],['Neutral (=)',neu,'#d1d5db']].map(([l,v,c])=>`<div class="flex items-center text-sm"><div class="w-24">${l}</div><div class="flex-1 bg-gray-100 rounded-full h-2 mx-3"><div class="h-2 rounded-full" style="width:${getPct(v)}%;background-color:${c}"></div></div><div class="w-8 text-right">${v}</div></div>`).join('')}</div><div><h4 class="font-bold mb-2">Active Times</h4><div class="grid grid-cols-4 gap-2 h-20 items-end">${Object.entries(times).map(([k,v])=>`<div class="flex flex-col items-center"><div class="w-full bg-indigo-100 rounded-t relative" style="height:${Math.max((v.t/maxT)*100,2)}%"><div class="absolute bottom-0 w-full bg-[#111827] opacity-80 rounded-t" style="height:${v.t>0?(1-(v.n/v.t))*100:0}%"></div></div><span class="text-[10px] uppercase mt-1 text-gray-500">${k.slice(0,3)}</span></div>`).join('')}</div></div>`;
             }
-
             // --- LISTENERS ---
             if(window.SpeechRecognition || window.webkitSpeechRecognition){
                 recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -474,13 +541,26 @@
                     if(qm) { qty = parseInt(qm[1]||qm[2]); let uStr=(qm[2]||qm[3]||'').toLowerCase(); if(uStr.startsWith('o')) unit='oz'; else if(uStr.startsWith('m')&&uStr.includes('i')) unit='min'; else if(uStr.startsWith('h')) unit='hr'; else unit=uStr; txt = txt.replace(qm[0],'').trim(); }
                     
                     const match = findBestMatch(txt);
-                    if(match) logHabit(match, time, qty, unit, note);
-                    else { pendingVoiceHabit = {name:capitalize(txt), time, qty, unit, note}; els.voice.name.textContent = pendingVoiceHabit.name; els.modals.voice.classList.remove('hidden'); }
+                    // Voice logs default to 'none' focus
+                    if(match) logHabit(match, time, qty, unit, note, 'none');
+                    else { 
+                        pendingVoiceHabit = {name:capitalize(txt), time, qty, unit, note, focus: 'none'}; // Added focus
+                        els.voice.name.textContent = pendingVoiceHabit.name; 
+                        els.modals.voice.classList.remove('hidden'); 
+                    }
                 };
                 els.voiceBtn.addEventListener('click', () => { if(isRecording) recognition.stop(); else recognition.start(); });
             } else { els.voiceBtn.style.display = 'none'; }
 
-            els.habitForm.onsubmit = (e) => { e.preventDefault(); if(els.habitSelect.value) logHabit(els.habitSelect.value, els.timeInput.value, els.habitQty.value, els.habitUnit.value, els.habitNote.value); };
+            // START: CHANGE #5 - Updated onsubmit to pass focus value
+            els.habitForm.onsubmit = (e) => { 
+                e.preventDefault(); 
+                if(els.habitSelect.value) {
+                    logHabit(els.habitSelect.value, els.timeInput.value, els.habitQty.value, els.habitUnit.value, els.habitNote.value, els.habitFocus.value); 
+                }
+            };
+            // END: CHANGE #5
+
             els.timeInput.oninput = (e) => { isTimeManuallyEdited=true; };els.habitSelect.onchange = () => { isTimeManuallyEdited=false; updateTimeInput(); };
             els.listContainer.onclick = (e) => { const b = e.target.closest('button'); if(!b) return; const {id,label,action} = b.dataset; if(label){ const h=habits.find(i=>i.id===id); if(h){ h.label=label; saveData(); renderHabits(); }} if(action==='delete'){ habits=habits.filter(i=>i.id!==id); saveData(); renderHabits(); }};
             els.clearBtn.onclick = () => els.modals.confirm.classList.remove('hidden');
@@ -501,24 +581,32 @@
             };
             els.analyze.close.onclick = () => els.modals.analyze.classList.add('hidden');
 
-            els.voice.add.onclick = () => { habitList.push(pendingVoiceHabit.name); habitList.sort(); saveData(); renderSelect(); logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
-            els.voice.log.onclick = () => { logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
+            // Updated voice modal logs to pass focus
+            els.voice.add.onclick = () => { 
+                habitList.push(pendingVoiceHabit.name); 
+                habitList.sort(); 
+                saveData(); 
+                renderSelect(); 
+                logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note, pendingVoiceHabit.focus); 
+                els.modals.voice.classList.add('hidden'); 
+            };
+            els.voice.log.onclick = () => { 
+                logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note, pendingVoiceHabit.focus); 
+                els.modals.voice.classList.add('hidden'); 
+            };
             els.voice.cancel.onclick = () => els.modals.voice.classList.add('hidden');
 
-            // START: NEW TOP 3 LISTENER
+            // Top 3 logs default to 'none' focus
             els.top3Container.onclick = (e) => {
                 const btn = e.target.closest('button');
                 if (btn && btn.dataset.habit) {
                     const habitText = btn.dataset.habit;
                     const timeStr = getFormattedTime(new Date());
                     
-                    // Log the habit (which will also refresh the Top 3)
-                    logHabit(habitText, timeStr);
+                    logHabit(habitText, timeStr, null, null, null, 'none'); // Pass 'none' for focus
                     
-                    // Add a quick visual confirmation
                     btn.classList.add('bg-green-100');
                     setTimeout(() => {
-                        // Need to find the button again as it might have been re-rendered
                         const newBtn = els.top3Container.querySelector(`button[data-habit="${habitText}"]`);
                         if (newBtn) {
                             newBtn.classList.remove('bg-green-100');
@@ -526,9 +614,9 @@
                     }, 500);
                 }
             };
-            // END: NEW TOP 3 LISTENER
 
             // --- ROUTINE LISTENERS ---
+            // Routine logs default to 'none' focus
             els.routineBtnContainer.onclick = (e) => {
                 const btn = e.target.closest('button');
                 if (btn && btn.dataset.routine) {
@@ -559,7 +647,7 @@
                     const habitText = btn.dataset.habit;
                     const timeStr = getFormattedTime(new Date());
                     
-                    logHabit(habitText, timeStr);
+                    logHabit(habitText, timeStr, null, null, null, 'none'); // Pass 'none' for focus
                     
                     btn.disabled = true;
                     btn.textContent = `✅ ${habitText}`;
@@ -569,6 +657,7 @@
 
             els.executeRoutine.close.onclick = () => {
                 els.executeRoutine.modal.classList.add('hidden');
+Signature Updated
             };
 
             els.routines.goBtn.onclick = () => {
