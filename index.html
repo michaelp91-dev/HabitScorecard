@@ -21,11 +21,9 @@
         .modal-overlay { background-color: rgba(17, 24, 39, 0.5); }
         .modal-content { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 90%; width: 400px; }
         
-        /* START: Drag-and-Drop Styles */
         label[draggable="true"] { cursor: grab; }
         label[draggable="true"]:active { cursor: grabbing; }
         label.drag-over { background-color: #f0f9ff; border-color: #bae6fd; }
-        /* END: Drag-and-Drop Styles */
         
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .recording { animation: pulse-red 1.5s infinite; color: #ef4444 !important; border-color: #ef4444 !important; }
@@ -47,6 +45,8 @@
             <div id="routine-buttons-container" class="flex flex-wrap gap-2 mb-4">
                 </div>
 
+            <div id="top3-habits-container" class="mb-4">
+                </div>
             <div id="view-scorecard">
                 <form id="add-habit-form" class="flex flex-col gap-3 mb-6">
                     <div class="flex gap-2 w-full">
@@ -215,10 +215,12 @@
                     editTitle: $('routine-edit-title'),
                     editHabitList: $('routine-edit-habit-list'),
                     editSave: $('routine-edit-save-btn')
-                }
-            };
+                },
 
-            const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                // START: NEW Top 3 Element
+                top3Container: $('top3-habits-container')
+                //
+                const getFormattedTime=(d)=>`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
             const updateTimeInput=(force=null)=>{const t=force||getFormattedTime(new Date());if(!isTimeManuallyEdited||force){els.timeInput.value=t;}};
             const capitalize=(s)=>s.charAt(0).toUpperCase()+s.slice(1);
 
@@ -244,17 +246,18 @@
                 habitList.sort((a,b) => a.localeCompare(b));
                 habits = JSON.parse(localStorage.getItem(HABIT_KEY)) || [];
                 habits = habits.filter(h => typeof h.text === 'string' && !h.text.includes('[object Promise]'));
-                routines = JSON.parse(localStorage.getItem(ROUTINE_KEY)) || {}; // Load routines
+                routines = JSON.parse(localStorage.getItem(ROUTINE_KEY)) || {}; 
                 saveData(); 
                 renderSelect(); 
                 renderHabits();
-                renderRoutineButtons(); // Render routines
+                renderRoutineButtons(); 
+                renderTop3Habits(); // Render Top 3
             }
 
             function saveData(){
                 localStorage.setItem(LIST_KEY, JSON.stringify(habitList));
                 localStorage.setItem(HABIT_KEY, JSON.stringify(habits));
-                localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); // Save routines
+                localStorage.setItem(ROUTINE_KEY, JSON.stringify(routines)); 
             }
 
             function logHabit(text, timeStr, qty=null, unit=null, note=null){
@@ -263,7 +266,9 @@
                 let safeQty = qty ? parseFloat(qty) : null;
                 if (safeQty !== null && (isNaN(safeQty) || safeQty < 0)) { alert("Please enter a valid positive number."); return; }
                 habits.push({id:crypto.randomUUID(), text, label:'none', createdAt:new Date().getTime(), displayTime:timeStr, quantity:safeQty, unit, note:note?note.substring(0,140):null});
-                saveData(); renderHabits();
+                saveData(); 
+                renderHabits();
+                renderTop3Habits(); // Update Top 3
                 els.habitSelect.value=""; els.habitQty.value=""; els.habitUnit.value=""; els.habitNote.value=""; isTimeManuallyEdited=false; updateTimeInput();
             }
 
@@ -284,14 +289,36 @@
 
             function renderManageList(){els.settings.list.innerHTML=habitList.map((h,i)=>`<li class="py-2 px-2 flex items-center justify-between group hover:bg-gray-50 rounded"><span class="flex-1 truncate">${h}</span><button data-i="${i}" data-act="del" class="text-gray-400 hover:text-red-600 px-2">✕</button></li>`).join('');}
 
+            // START: NEW TOP 3 FUNCTION
+            function renderTop3Habits() {
+                const counts = {};
+                habits.forEach(h => { counts[h.text] = (counts[h.text] || 0) + 1; });
+                
+                const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a);
+                const top3 = sorted.slice(0, 3);
+                
+                els.top3Container.innerHTML = ''; // Clear it
+                if (top3.length === 0) return; // Don't show if no habits
+
+                let html = '<p class="text-sm font-medium text-gray-500 mb-1">Quick Add:</p><div class="flex flex-wrap gap-2">';
+                top3.forEach(([text, count]) => {
+                    html += `<button class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors" data-habit="${text}">
+                                ${text} <span class="ml-1.5 inline-block bg-gray-100 text-gray-600 text-xs font-semibold px-2 rounded-full">${count}</span>
+                             </button>`;
+                });
+                html += '</div>';
+                els.top3Container.innerHTML = html;
+            }
+            // END: NEW TOP 3 FUNCTION
+
             // --- ROUTINE FUNCTIONS ---
             function renderRoutineButtons() {
-                els.routineBtnContainer.innerHTML = ''; // Clear existing buttons
+                els.routineBtnContainer.innerHTML = ''; 
                 for (const routineName of Object.keys(routines)) {
                     const btn = document.createElement('button');
                     btn.className = "inline-flex items-center px-4 py-2 border border-indigo-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors";
                     btn.textContent = routineName;
-                    btn.dataset.routine = routineName; // Store name for listener
+                    btn.dataset.routine = routineName; 
                     els.routineBtnContainer.appendChild(btn);
                 }
             }
@@ -308,18 +335,16 @@
                 });
             }
             
-            // START: MODIFIED showRoutineEditView
             function showRoutineEditView(routineName) {
                 currentEditingRoutine = routineName;
                 els.routines.editTitle.textContent = `${routineName}`;
                 
                 const habitsInRoutine = routines[routineName] || [];
                 const habitsInRoutineSet = new Set(habitsInRoutine);
-                const otherHabits = habitList.filter(h => !habitsInRoutineSet.has(h)); // Already alphabetical
+                const otherHabits = habitList.filter(h => !habitsInRoutineSet.has(h)); 
                 
-                els.routines.editHabitList.innerHTML = ''; // Clear list
+                els.routines.editHabitList.innerHTML = ''; 
 
-                // 1. Render habits already in the routine (in their saved order)
                 habitsInRoutine.forEach(habit => {
                     els.routines.editHabitList.innerHTML += `
                         <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200" draggable="true" data-habit-label="${habit}">
@@ -330,7 +355,6 @@
                     `;
                 });
 
-                // 2. Render other habits (alphabetically)
                 otherHabits.forEach(habit => {
                     els.routines.editHabitList.innerHTML += `
                         <label class="block p-3 rounded-md hover:bg-gray-50 border border-gray-200" draggable="true" data-habit-label="${habit}">
@@ -341,7 +365,6 @@
                     `;
                 });
 
-                // 3. Attach drag-and-drop listeners
                 els.routines.editHabitList.querySelectorAll('label[draggable="true"]').forEach(label => {
                     label.addEventListener('dragstart', handleDragStart, false);
                     label.addEventListener('dragenter', handleDragEnter, false);
@@ -354,11 +377,9 @@
                 els.routines.listView.classList.add('hidden');
                 els.routines.editView.classList.remove('hidden');
             }
-            // END: MODIFIED showRoutineEditView
 
-            // START: NEW Drag-and-Drop Handlers
+            // --- Drag-and-Drop Handlers ---
             function handleDragStart(e) {
-                // 'this' is the label being dragged
                 this.style.opacity = '0.4';
                 dragSrcEl = this;
                 e.dataTransfer.effectAllowed = 'move';
@@ -371,7 +392,6 @@
             }
 
             function handleDragEnter(e) {
-                // 'this' is the label being hovered over
                 this.classList.add('drag-over');
             }
             
@@ -381,17 +401,14 @@
 
             function handleDrop(e) {
                 if (e.stopPropagation) { e.stopPropagation(); }
-                // 'this' is the label being dropped on
                 if (dragSrcEl !== this) {
                     const allItems = Array.from(this.parentNode.children);
                     const srcIndex = allItems.indexOf(dragSrcEl);
                     const targetIndex = allItems.indexOf(this);
 
                     if (srcIndex < targetIndex) {
-                        // Dragging down: insert *after* the target
                         this.parentNode.insertBefore(dragSrcEl, this.nextSibling);
                     } else {
-                        // Dragging up: insert *before* the target
                         this.parentNode.insertBefore(dragSrcEl, this);
                     }
                 }
@@ -400,16 +417,12 @@
             }
 
             function handleDragEnd(e) {
-                // 'this' is the label that was dragged
                 this.style.opacity = '1';
-                // Clean up all drag-over indicators
                 els.routines.editHabitList.querySelectorAll('label').forEach(label => {
                     label.classList.remove('drag-over');
                 });
             }
-            // END: NEW Drag-and-Drop Handlers
-
-
+            
             async function generateAnalysis() {
                 if(habits.length===0){els.analyze.content.innerHTML='<p class="text-center text-gray-500 py-8">No data yet.</p>';return;}
                 let pos=0,neg=0,neu=0;const times={Morning:{t:0,n:0},Afternoon:{t:0,n:0},Evening:{t:0,n:0},Night:{t:0,n:0}},counts={};
@@ -491,6 +504,29 @@
             els.voice.log.onclick = () => { logHabit(pendingVoiceHabit.name, pendingVoiceHabit.time, pendingVoiceHabit.qty, pendingVoiceHabit.unit, pendingVoiceHabit.note); els.modals.voice.classList.add('hidden'); };
             els.voice.cancel.onclick = () => els.modals.voice.classList.add('hidden');
 
+            // START: NEW TOP 3 LISTENER
+            els.top3Container.onclick = (e) => {
+                const btn = e.target.closest('button');
+                if (btn && btn.dataset.habit) {
+                    const habitText = btn.dataset.habit;
+                    const timeStr = getFormattedTime(new Date());
+                    
+                    // Log the habit (which will also refresh the Top 3)
+                    logHabit(habitText, timeStr);
+                    
+                    // Add a quick visual confirmation
+                    btn.classList.add('bg-green-100');
+                    setTimeout(() => {
+                        // Need to find the button again as it might have been re-rendered
+                        const newBtn = els.top3Container.querySelector(`button[data-habit="${habitText}"]`);
+                        if (newBtn) {
+                            newBtn.classList.remove('bg-green-100');
+                        }
+                    }, 500);
+                }
+            };
+            // END: NEW TOP 3 LISTENER
+
             // --- ROUTINE LISTENERS ---
             els.routineBtnContainer.onclick = (e) => {
                 const btn = e.target.closest('button');
@@ -504,7 +540,6 @@
                     if (habitsInRoutine.length === 0) {
                         els.executeRoutine.content.innerHTML = '<p class="text-gray-500">No habits in this routine. Add some in Settings.</p>';
                     } else {
-                        // This now respects the saved order
                         habitsInRoutine.forEach(habitText => {
                             const habitBtn = document.createElement('button');
                             habitBtn.className = "w-full p-4 bg-white border border-gray-300 rounded-md text-lg font-medium text-gray-900 text-left hover:bg-gray-50 transition-all";
@@ -533,7 +568,6 @@
 
             els.executeRoutine.close.onclick = () => {
                 els.executeRoutine.modal.classList.add('hidden');
-CSS
             };
 
             els.routines.goBtn.onclick = () => {
@@ -582,17 +616,14 @@ CSS
                 currentEditingRoutine = null;
             };
             
-            // START: MODIFIED Save Button Logic
             els.routines.editSave.onclick = () => {
                 if (!currentEditingRoutine) return;
                 
                 const selectedHabits = [];
                 
-                // Iterate all labels IN THEIR CURRENT DOM ORDER
                 els.routines.editHabitList.querySelectorAll('label').forEach(label => {
                     const checkbox = label.querySelector('input[type="checkbox"]');
                     if (checkbox && checkbox.checked) {
-                        // Add the habit if it's checked
                         selectedHabits.push(checkbox.dataset.habit);
                     }
                 });
@@ -605,7 +636,6 @@ CSS
                 renderManageRoutineList();
                 currentEditingRoutine = null;
             };
-            // END: MODIFIED Save Button Logic
 
             updateTimeInput(); loadData();
             document.addEventListener('visibilitychange', () => { if(!document.hidden) updateTimeInput(); });
